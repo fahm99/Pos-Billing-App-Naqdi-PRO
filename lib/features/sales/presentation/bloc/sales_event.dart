@@ -28,3 +28,11 @@ class ReturnInvoiceEvent extends SalesEvent {
   @override
   List<Object?> get props => [id];
 }
+
+/// حدث إتمام البيع مع خصم المخزون
+class CompleteSaleEvent extends SalesEvent {
+  final Invoice invoice;
+  const CompleteSaleEvent(this.invoice);
+  @override
+  List<Object?> get props => [invoice];
+}

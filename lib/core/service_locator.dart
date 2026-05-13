@@ -61,10 +61,23 @@ Future<void> init() async {
         getInvoicesUseCase: sl(),
         saveInvoiceUseCase: sl(),
         deleteInvoiceUseCase: sl(),
+        completeSaleUseCase: sl(),
+        returnInvoiceUseCase: sl(),
       ));
   sl.registerLazySingleton(() => GetInvoicesUseCase(sl()));
+  sl.registerLazySingleton(() => GetInvoiceByIdUseCase(sl()));
   sl.registerLazySingleton(() => SaveInvoiceUseCase(sl()));
   sl.registerLazySingleton(() => DeleteInvoiceUseCase(sl()));
+  sl.registerLazySingleton(() => CompleteSaleUseCase(
+        salesRepository: sl(),
+        productRepository: sl(),
+        inventoryRepository: sl(),
+      ));
+  sl.registerLazySingleton(() => ReturnInvoiceUseCase(
+        salesRepository: sl(),
+        productRepository: sl(),
+        inventoryRepository: sl(),
+      ));
   sl.registerLazySingleton<SalesRepository>(() => SalesRepositoryImpl());
 
   // ── Customers ─────────────────────────────────────────────

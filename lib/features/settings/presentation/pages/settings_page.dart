@@ -90,10 +90,10 @@ class _SettingsPageState extends State<SettingsPage> {
             _buildListGroup(
               children: [
                 _buildListItem(
-                  icon: Icons.inventory_2_outlined,
-                  title: 'المخزون',
-                  subtitle: 'تتبع الكميات وحركة المخزون',
-                  onTap: () => context.push('/inventory'),
+                  icon: Icons.people_outline,
+                  title: 'العملاء',
+                  subtitle: 'إدارة العملاء',
+                  onTap: () => context.push('/customers'),
                 ),
                 _buildDivider(),
                 _buildListItem(

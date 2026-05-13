@@ -31,6 +31,20 @@ class SalesRepositoryImpl implements SalesRepository {
   }
 
   @override
+  Future<Either<Failure, Invoice>> getInvoiceByNumber(
+      String invoiceNumber) async {
+    try {
+      final model = HiveDatabase.invoiceBox.values.firstWhere(
+        (m) => m.invoiceNumber == invoiceNumber,
+        orElse: () => throw Exception('الفاتورة غير موجودة'),
+      );
+      return Right(model.toEntity());
+    } catch (e) {
+      return Left(CacheFailure(e.toString()));
+    }
+  }
+
+  @override
   Future<Either<Failure, void>> saveInvoice(Invoice invoice) async {
     try {
       final model = InvoiceModel.fromEntity(invoice);

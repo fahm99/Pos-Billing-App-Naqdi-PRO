@@ -29,9 +29,9 @@ class _MainShellState extends State<MainShell> {
       path: '/sales',
     ),
     const _NavItem(
-      icon: Icons.people_outline,
-      label: 'العملاء',
-      path: '/customers',
+      icon: Icons.inventory_outlined,
+      label: 'المخزون',
+      path: '/inventory',
     ),
     const _NavItem(
       icon: Icons.more_horiz,

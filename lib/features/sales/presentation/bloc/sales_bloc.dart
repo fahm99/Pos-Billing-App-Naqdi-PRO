@@ -11,16 +11,21 @@ class SalesBloc extends Bloc<SalesEvent, SalesState> {
   final GetInvoicesUseCase getInvoicesUseCase;
   final SaveInvoiceUseCase saveInvoiceUseCase;
   final DeleteInvoiceUseCase deleteInvoiceUseCase;
+  final CompleteSaleUseCase completeSaleUseCase;
+  final ReturnInvoiceUseCase returnInvoiceUseCase;
 
   SalesBloc({
     required this.getInvoicesUseCase,
     required this.saveInvoiceUseCase,
     required this.deleteInvoiceUseCase,
+    required this.completeSaleUseCase,
+    required this.returnInvoiceUseCase,
   }) : super(const SalesState()) {
     on<LoadInvoicesEvent>(_onLoad);
     on<SaveInvoiceEvent>(_onSave);
     on<DeleteInvoiceEvent>(_onDelete);
     on<ReturnInvoiceEvent>(_onReturn);
+    on<CompleteSaleEvent>(_onCompleteSale);
   }
 
   Future<void> _onLoad(
@@ -62,42 +67,43 @@ class SalesBloc extends Bloc<SalesEvent, SalesState> {
     );
   }
 
+  /// إتمام عملية البيع مع خصم المخزون
+  Future<void> _onCompleteSale(
+      CompleteSaleEvent event, Emitter<SalesState> emit) async {
+    emit(state.copyWith(status: SalesStatus.loading));
+
+    final result =
+        await completeSaleUseCase(CompleteSaleParams(invoice: event.invoice));
+
+    result.fold(
+      (f) =>
+          emit(state.copyWith(status: SalesStatus.error, message: f.message)),
+      (invoice) {
+        emit(state.copyWith(
+            status: SalesStatus.success,
+            message: 'تم إتمام البيع وخصم المخزون'));
+        add(LoadInvoicesEvent());
+      },
+    );
+  }
+
+  /// استرجاع الفاتورة مع إعادة الكميات للمخزون
   Future<void> _onReturn(
       ReturnInvoiceEvent event, Emitter<SalesState> emit) async {
-    try {
-      final invoice = state.invoices.firstWhere((i) => i.id == event.id);
-      final returned = Invoice(
-        id: invoice.id,
-        invoiceNumber: invoice.invoiceNumber,
-        date: invoice.date,
-        items: invoice.items,
-        subtotal: invoice.subtotal,
-        discountAmount: invoice.discountAmount,
-        taxAmount: invoice.taxAmount,
-        totalAmount: invoice.totalAmount,
-        paymentMethod: invoice.paymentMethod,
-        cashPaid: invoice.cashPaid,
-        upiPaid: invoice.upiPaid,
-        cardPaid: invoice.cardPaid,
-        changeAmount: invoice.changeAmount,
-        customerId: invoice.customerId,
-        customerName: invoice.customerName,
-        status: InvoiceStatus.returned,
-        notes: invoice.notes,
-      );
-      final result = await saveInvoiceUseCase(returned);
-      result.fold(
-        (f) =>
-            emit(state.copyWith(status: SalesStatus.error, message: f.message)),
-        (_) {
-          emit(state.copyWith(
-              status: SalesStatus.success, message: 'تم تسجيل الاسترجاع'));
-          add(LoadInvoicesEvent());
-        },
-      );
-    } catch (_) {
-      emit(state.copyWith(
-          status: SalesStatus.error, message: 'الفاتورة غير موجودة'));
-    }
+    emit(state.copyWith(status: SalesStatus.loading));
+
+    final result =
+        await returnInvoiceUseCase(ReturnInvoiceParams(invoiceId: event.id));
+
+    result.fold(
+      (f) =>
+          emit(state.copyWith(status: SalesStatus.error, message: f.message)),
+      (_) {
+        emit(state.copyWith(
+            status: SalesStatus.success,
+            message: 'تم استرجاع الفاتورة وإعادة الكميات للمخزون'));
+        add(LoadInvoicesEvent());
+      },
+    );
   }
 }

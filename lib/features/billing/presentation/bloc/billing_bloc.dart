@@ -20,6 +20,7 @@ class BillingBloc extends Bloc<BillingEvent, BillingState> {
     on<UpdateQuantityEvent>(_onUpdateQuantity);
     on<ClearCartEvent>(_onClearCart);
     on<PrintReceiptEvent>(_onPrintReceipt);
+    on<CheckStockEvent>(_onCheckStock);
   }
 
   Future<void> _onScanBarcode(
@@ -41,6 +42,19 @@ class BillingBloc extends Bloc<BillingEvent, BillingState> {
 
     final existingIndex = cleanState.cartItems
         .indexWhere((item) => item.product.id == event.product.id);
+
+    // التحقق من المخزون قبل الإضافة
+    final currentQty =
+        existingIndex >= 0 ? cleanState.cartItems[existingIndex].quantity : 0;
+    final newQty = currentQty + 1;
+
+    if (newQty > event.product.stock) {
+      emit(state.copyWith(
+          error:
+              'الكمية المطلوبة (${newQty}) أكبر من المتوفر (${event.product.stock})'));
+      return;
+    }
+
     if (existingIndex >= 0) {
       final existingItem = cleanState.cartItems[existingIndex];
       final backendItems = List<CartItem>.from(cleanState.cartItems);
@@ -72,6 +86,16 @@ class BillingBloc extends Bloc<BillingEvent, BillingState> {
     final index = state.cartItems
         .indexWhere((item) => item.product.id == event.productId);
     if (index >= 0) {
+      final product = state.cartItems[index].product;
+
+      // التحقق من المخزون
+      if (event.quantity > product.stock) {
+        emit(state.copyWith(
+            error:
+                'الكمية المطلوبة (${event.quantity}) أكبر من المتوفر (${product.stock})'));
+        return;
+      }
+
       final items = List<CartItem>.from(state.cartItems);
       items[index] = items[index].copyWith(quantity: event.quantity);
       emit(state.copyWith(cartItems: items));
@@ -134,5 +158,19 @@ class BillingBloc extends Bloc<BillingEvent, BillingState> {
       // Reset error instantly avoids sticky error
       emit(state.copyWith(clearError: true));
     }
+  }
+
+  /// التحقق من توفر المخزون لجميع المنتجات في السلة
+  Future<void> _onCheckStock(
+      CheckStockEvent event, Emitter<BillingState> emit) async {
+    for (final item in state.cartItems) {
+      if (item.quantity > item.product.stock) {
+        emit(state.copyWith(
+            error:
+                'الكمية غير متوفرة: ${item.product.name} (متوفر: ${item.product.stock}, مطلوب: ${item.quantity})'));
+        return;
+      }
+    }
+    emit(state.copyWith(error: null));
   }
 }

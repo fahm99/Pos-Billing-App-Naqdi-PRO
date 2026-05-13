@@ -580,7 +580,8 @@ class _CheckoutPageState extends State<CheckoutPage> {
       customerId: _selectedCustomer?.id,
       customerName: _selectedCustomer?.name,
     );
-    context.read<SalesBloc>().add(SaveInvoiceEvent(invoice));
+    // استخدام CompleteSaleEvent بدلاً من SaveInvoiceEvent لخصم المخزون تلقائياً
+    context.read<SalesBloc>().add(CompleteSaleEvent(invoice));
   }
 
   Widget _headerCell(String text, TextAlign align) {

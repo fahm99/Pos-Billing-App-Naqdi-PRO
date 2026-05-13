@@ -471,7 +471,8 @@ class _PrintOptionsPageState extends State<PrintOptionsPage> {
       cardPaid: _cardPaid,
       changeAmount: _calcChange(total),
     );
-    context.read<SalesBloc>().add(SaveInvoiceEvent(invoice));
+    // استخدام CompleteSaleEvent بدلاً من SaveInvoiceEvent لخصم المخزون تلقائياً
+    context.read<SalesBloc>().add(CompleteSaleEvent(invoice));
   }
 
   String _paymentLabel(PaymentMethod m) {

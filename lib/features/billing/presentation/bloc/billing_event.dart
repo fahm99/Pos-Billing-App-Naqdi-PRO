@@ -55,3 +55,6 @@ class PrintReceiptEvent extends BillingEvent {
   @override
   List<Object> get props => [shopName, address1, address2, phone, footer];
 }
+
+/// حدث التحقق من المخزون
+class CheckStockEvent extends BillingEvent {}

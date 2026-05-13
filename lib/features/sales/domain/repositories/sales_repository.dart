@@ -7,4 +7,7 @@ abstract class SalesRepository {
   Future<Either<Failure, Invoice>> getInvoiceById(String id);
   Future<Either<Failure, void>> saveInvoice(Invoice invoice);
   Future<Either<Failure, void>> deleteInvoice(String id);
+
+  /// الحصول على الفاتورة بالرقم التسلسلي
+  Future<Either<Failure, Invoice>> getInvoiceByNumber(String invoiceNumber);
 }
