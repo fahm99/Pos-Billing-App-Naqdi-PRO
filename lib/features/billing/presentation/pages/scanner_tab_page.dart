@@ -363,20 +363,20 @@ class _ScannerTabPageState extends State<ScannerTabPage>
               shape: BoxShape.circle,
             ),
             child: Icon(Icons.shopping_cart_outlined,
-                size: 48, color: Colors.grey[400]),
+                size: 35, color: Colors.grey[400]),
           ),
-          const SizedBox(height: 20),
+          const SizedBox(height: 18),
           const Text(
             'السلة فارغة',
             style: TextStyle(
-                fontSize: 20,
+                fontSize: 18,
                 fontWeight: FontWeight.w800,
                 color: Color(0xFF1A1C1E)),
           ),
           const SizedBox(height: 8),
           Text(
             'امسح المنتجات لإضافتها للسلة',
-            style: TextStyle(fontSize: 14, color: Colors.grey[500]),
+            style: TextStyle(fontSize: 8, color: Colors.grey[500]),
           ),
         ],
       ),
@@ -414,7 +414,7 @@ class _ScannerTabPageState extends State<ScannerTabPage>
                 ),
                 const SizedBox(height: 4),
                 Text(
-                  '${item.product.price}ر',
+                  '${item.product.price}ريال',
                   style: const TextStyle(
                       color: Color(0xFF00B386), fontWeight: FontWeight.w800),
                 ),

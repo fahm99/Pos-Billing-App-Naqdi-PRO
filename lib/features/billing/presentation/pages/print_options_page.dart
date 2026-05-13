@@ -1,6 +1,14 @@
+import 'dart:io';
+import 'dart:typed_data';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
+import 'package:path_provider/path_provider.dart';
+import 'package:pdf/pdf.dart';
+import 'package:pdf/widgets.dart' as pw;
+import 'package:printing/printing.dart';
+import 'package:share_plus/share_plus.dart';
 import 'package:uuid/uuid.dart';
 
 import '../../../../core/theme/app_theme.dart';
@@ -23,6 +31,7 @@ class _PrintOptionsPageState extends State<PrintOptionsPage> {
   double _cashPaid = 0;
   double _upiPaid = 0;
   double _cardPaid = 0;
+  bool _isSavingPdf = false;
 
   double _calcTotal(double subtotal) {
     final afterDiscount = subtotal - _discountAmount;
@@ -80,6 +89,8 @@ class _PrintOptionsPageState extends State<PrintOptionsPage> {
                 upiId = shopState.shop.upiId;
               }
 
+              final taxAmount =
+                  (subtotal - _discountAmount) * (_taxPercent / 100);
               return SingleChildScrollView(
                 padding: const EdgeInsets.all(16),
                 child: Column(
@@ -98,8 +109,8 @@ class _PrintOptionsPageState extends State<PrintOptionsPage> {
                     const SizedBox(height: 24),
 
                     // Print Options
-                    _buildPrintOptions(
-                        billingState, shopState, shopName, upiId),
+                    _buildPrintOptions(billingState, shopState, shopName, upiId,
+                        subtotal, total, change, taxAmount),
                     const SizedBox(height: 24),
 
                     // Sell Without Invoice Button
@@ -305,8 +316,15 @@ class _PrintOptionsPageState extends State<PrintOptionsPage> {
     );
   }
 
-  Widget _buildPrintOptions(BillingState billingState, ShopState shopState,
-      String shopName, String upiId) {
+  Widget _buildPrintOptions(
+      BillingState billingState,
+      ShopState shopState,
+      String shopName,
+      String upiId,
+      double subtotal,
+      double total,
+      double change,
+      double taxAmount) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -314,18 +332,96 @@ class _PrintOptionsPageState extends State<PrintOptionsPage> {
             style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
         const SizedBox(height: 12),
 
-        // Print as PDF
+        // Save as PDF
         GestureDetector(
-          onTap: () {
-            if (shopState is ShopLoaded) {
-              context.read<BillingBloc>().add(PrintReceiptEvent(
-                  shopName: shopState.shop.name,
-                  address1: shopState.shop.addressLine1,
-                  address2: shopState.shop.addressLine2,
-                  phone: shopState.shop.phoneNumber,
-                  footer: shopState.shop.footerText));
-            }
-          },
+          onTap: _isSavingPdf
+              ? null
+              : () {
+                  if (shopState is ShopLoaded) {
+                    _savePdfToDevice(
+                      shopName: shopName,
+                      address1: shopState.shop.addressLine1,
+                      address2: shopState.shop.addressLine2,
+                      phone: shopState.shop.phoneNumber,
+                      footer: shopState.shop.footerText,
+                      billingState: billingState,
+                      subtotal: subtotal,
+                      total: total,
+                      change: change,
+                      taxAmount: taxAmount,
+                    );
+                  }
+                },
+          child: Container(
+            width: double.infinity,
+            padding: const EdgeInsets.all(16),
+            decoration: BoxDecoration(
+              color: Colors.white,
+              borderRadius: BorderRadius.circular(12),
+              border: Border.all(color: Colors.grey[200]!),
+            ),
+            child: Row(
+              children: [
+                Container(
+                  padding: const EdgeInsets.all(10),
+                  decoration: BoxDecoration(
+                    color: const Color(0xFF2196F3).withOpacity(0.1),
+                    borderRadius: BorderRadius.circular(10),
+                  ),
+                  child: _isSavingPdf
+                      ? const SizedBox(
+                          width: 24,
+                          height: 24,
+                          child: CircularProgressIndicator(
+                            strokeWidth: 2,
+                            color: Color(0xFF2196F3),
+                          ),
+                        )
+                      : const Icon(Icons.save_alt,
+                          color: Color(0xFF2196F3), size: 24),
+                ),
+                const SizedBox(width: 16),
+                const Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text('حفظ كملف PDF',
+                          style: TextStyle(
+                              fontSize: 15, fontWeight: FontWeight.w600)),
+                      SizedBox(height: 2),
+                      Text('حفظ الفاتورة على جهازك',
+                          style: TextStyle(fontSize: 12, color: Colors.grey)),
+                    ],
+                  ),
+                ),
+                const Icon(Icons.chevron_left, color: Colors.grey),
+              ],
+            ),
+          ),
+        ),
+
+        const SizedBox(height: 12),
+
+        // Share PDF
+        GestureDetector(
+          onTap: _isSavingPdf
+              ? null
+              : () {
+                  if (shopState is ShopLoaded) {
+                    _sharePdf(
+                      shopName: shopName,
+                      address1: shopState.shop.addressLine1,
+                      address2: shopState.shop.addressLine2,
+                      phone: shopState.shop.phoneNumber,
+                      footer: shopState.shop.footerText,
+                      billingState: billingState,
+                      subtotal: subtotal,
+                      total: total,
+                      change: change,
+                      taxAmount: taxAmount,
+                    );
+                  }
+                },
           child: Container(
             width: double.infinity,
             padding: const EdgeInsets.all(16),
@@ -342,14 +438,22 @@ class _PrintOptionsPageState extends State<PrintOptionsPage> {
                     color: const Color(0xFFE74C3C).withOpacity(0.1),
                     borderRadius: BorderRadius.circular(10),
                   ),
-                  child: const Icon(Icons.picture_as_pdf,
+                  child: const Icon(Icons.share,
                       color: Color(0xFFE74C3C), size: 24),
                 ),
                 const SizedBox(width: 16),
                 const Expanded(
-                  child: Text('طباعة كـ PDF',
-                      style:
-                          TextStyle(fontSize: 15, fontWeight: FontWeight.w600)),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text('مشاركة PDF',
+                          style: TextStyle(
+                              fontSize: 15, fontWeight: FontWeight.w600)),
+                      SizedBox(height: 2),
+                      Text('مشاركة الفاتورة عبر التطبيقات',
+                          style: TextStyle(fontSize: 12, color: Colors.grey)),
+                    ],
+                  ),
                 ),
                 const Icon(Icons.chevron_left, color: Colors.grey),
               ],
@@ -392,9 +496,17 @@ class _PrintOptionsPageState extends State<PrintOptionsPage> {
                 ),
                 const SizedBox(width: 16),
                 const Expanded(
-                  child: Text('طباعة عبر الطابعة',
-                      style:
-                          TextStyle(fontSize: 15, fontWeight: FontWeight.w600)),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text('طباعة عبر الطابعة',
+                          style: TextStyle(
+                              fontSize: 15, fontWeight: FontWeight.w600)),
+                      SizedBox(height: 2),
+                      Text('طباعة الفاتورة على طابعة بلوتوث',
+                          style: TextStyle(fontSize: 12, color: Colors.grey)),
+                    ],
+                  ),
                 ),
                 const Icon(Icons.chevron_left, color: Colors.grey),
               ],
@@ -471,8 +583,272 @@ class _PrintOptionsPageState extends State<PrintOptionsPage> {
       cardPaid: _cardPaid,
       changeAmount: _calcChange(total),
     );
-    // استخدام CompleteSaleEvent بدلاً من SaveInvoiceEvent لخصم المخزون تلقائياً
     context.read<SalesBloc>().add(CompleteSaleEvent(invoice));
+  }
+
+  Future<Uint8List> _generateInvoicePdf({
+    required String shopName,
+    required String address1,
+    required String address2,
+    required String phone,
+    required String footer,
+    required BillingState billingState,
+    required double subtotal,
+    required double discountAmount,
+    required double taxAmount,
+    required double total,
+    required double change,
+    required String invoiceNumber,
+  }) async {
+    final doc = pw.Document();
+
+    pw.Font? arabicFont;
+    try {
+      arabicFont = await PdfGoogleFonts.cairoRegular();
+    } catch (_) {}
+
+    final theme = pw.ThemeData.withFont(
+      base: arabicFont ?? pw.Font.helvetica(),
+    );
+
+    final items = billingState.cartItems;
+
+    doc.addPage(
+      pw.MultiPage(
+        theme: theme,
+        pageFormat: PdfPageFormat.a4,
+        margin: const pw.EdgeInsets.all(32),
+        build: (context) => [
+          pw.Header(
+            level: 0,
+            child: pw.Text(shopName,
+                textAlign: pw.TextAlign.center,
+                style: const pw.TextStyle(fontSize: 22)),
+          ),
+          if (address1.isNotEmpty)
+            pw.Paragraph(text: address1, textAlign: pw.TextAlign.center),
+          if (address2.isNotEmpty)
+            pw.Paragraph(text: address2, textAlign: pw.TextAlign.center),
+          if (phone.isNotEmpty)
+            pw.Paragraph(
+                text: 'الهاتف: $phone', textAlign: pw.TextAlign.center),
+          pw.SizedBox(height: 20),
+          pw.Divider(),
+          pw.SizedBox(height: 12),
+          pw.Row(
+            mainAxisAlignment: pw.MainAxisAlignment.spaceBetween,
+            children: [
+              pw.Text('رقم الفاتورة: $invoiceNumber'),
+              pw.Text('التاريخ: ${_formatDate(DateTime.now())}'),
+            ],
+          ),
+          pw.SizedBox(height: 20),
+          pw.TableHelper.fromTextArray(
+            headerStyle:
+                pw.TextStyle(fontWeight: pw.FontWeight.bold, fontSize: 11),
+            headerAlignment: pw.Alignment.center,
+            cellAlignment: pw.Alignment.center,
+            headers: ['#', 'المنتج', 'السعر', 'الكمية', 'الإجمالي'],
+            data: List.generate(
+                items.length,
+                (i) => [
+                      '${i + 1}',
+                      items[i].product.name,
+                      items[i].product.price.toStringAsFixed(2),
+                      '${items[i].quantity}',
+                      items[i].total.toStringAsFixed(2),
+                    ]),
+          ),
+          pw.SizedBox(height: 20),
+          pw.Divider(),
+          pw.SizedBox(height: 10),
+          _buildPdfTotalRow('المجموع الفرعي', subtotal.toStringAsFixed(2)),
+          if (discountAmount > 0)
+            _buildPdfTotalRow('الخصم', '-${discountAmount.toStringAsFixed(2)}'),
+          if (taxAmount > 0)
+            _buildPdfTotalRow('الضريبة', taxAmount.toStringAsFixed(2)),
+          _buildPdfTotalRow('الإجمالي', total.toStringAsFixed(2), isBold: true),
+          pw.SizedBox(height: 20),
+          pw.Divider(),
+          pw.SizedBox(height: 10),
+          pw.Text('طريقة الدفع: ${_paymentLabel(_paymentMethod)}'),
+          if (_paymentMethod == PaymentMethod.cash ||
+              _paymentMethod == PaymentMethod.mixed)
+            pw.Text('المبلغ النقدي: ${_cashPaid.toStringAsFixed(2)}'),
+          if (_paymentMethod == PaymentMethod.mixed) ...[
+            if (_upiPaid > 0)
+              pw.Text('مبلغ UPI: ${_upiPaid.toStringAsFixed(2)}'),
+            if (_cardPaid > 0)
+              pw.Text('مبلغ البطاقة: ${_cardPaid.toStringAsFixed(2)}'),
+          ],
+          if (change > 0) pw.Text('الباقي: ${change.toStringAsFixed(2)}'),
+          if (footer.isNotEmpty) ...[
+            pw.SizedBox(height: 30),
+            pw.Divider(),
+            pw.SizedBox(height: 10),
+            pw.Paragraph(text: footer, textAlign: pw.TextAlign.center),
+          ],
+        ],
+      ),
+    );
+    return doc.save();
+  }
+
+  pw.Widget _buildPdfTotalRow(String label, String value,
+      {bool isBold = false}) {
+    return pw.Padding(
+      padding: const pw.EdgeInsets.symmetric(vertical: 3),
+      child: pw.Row(
+        mainAxisAlignment: pw.MainAxisAlignment.spaceBetween,
+        children: [
+          pw.Text(label,
+              style: pw.TextStyle(
+                  fontWeight:
+                      isBold ? pw.FontWeight.bold : pw.FontWeight.normal)),
+          pw.Text(value,
+              style: pw.TextStyle(
+                  fontWeight:
+                      isBold ? pw.FontWeight.bold : pw.FontWeight.normal)),
+        ],
+      ),
+    );
+  }
+
+  String _formatDate(DateTime date) {
+    return '${date.year}/${_twoDigits(date.month)}/${_twoDigits(date.day)} ${_twoDigits(date.hour)}:${_twoDigits(date.minute)}';
+  }
+
+  String _twoDigits(int n) => n.toString().padLeft(2, '0');
+
+  /// حفظ ملف PDF على الجهاز
+  Future<void> _savePdfToDevice({
+    required String shopName,
+    required String address1,
+    required String address2,
+    required String phone,
+    required String footer,
+    required BillingState billingState,
+    required double subtotal,
+    required double total,
+    required double change,
+    required double taxAmount,
+  }) async {
+    setState(() => _isSavingPdf = true);
+    try {
+      final invoiceNumber =
+          'INV-${DateTime.now().millisecondsSinceEpoch.toString().substring(7)}';
+
+      final bytes = await _generateInvoicePdf(
+        shopName: shopName,
+        address1: address1,
+        address2: address2,
+        phone: phone,
+        footer: footer,
+        billingState: billingState,
+        subtotal: subtotal,
+        discountAmount: _discountAmount,
+        taxAmount: taxAmount,
+        total: total,
+        change: change,
+        invoiceNumber: invoiceNumber,
+      );
+
+      // حفظ الملف على الجهاز
+      final directory = await getApplicationDocumentsDirectory();
+      final invoicesDir = Directory('${directory.path}/invoices');
+
+      if (!await invoicesDir.exists()) {
+        await invoicesDir.create(recursive: true);
+      }
+
+      final fileName = 'فاتورة_$invoiceNumber.pdf';
+      final file = File('${invoicesDir.path}/$fileName');
+      await file.writeAsBytes(bytes);
+
+      if (mounted) {
+        _saveInvoice(context, billingState);
+        ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+          content: Text('تم حفظ الفاتورة في: ${file.path}'),
+          backgroundColor: Colors.green,
+          duration: const Duration(seconds: 4),
+          action: SnackBarAction(
+            label: 'مشاركة',
+            textColor: Colors.white,
+            onPressed: () {
+              Share.shareXFiles([XFile(file.path)],
+                  text: 'فاتورة رقم $invoiceNumber');
+            },
+          ),
+        ));
+        context.read<BillingBloc>().add(ClearCartEvent());
+        context.go('/scan');
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+          content: Text('فشل حفظ PDF: $e'),
+          backgroundColor: Colors.red,
+        ));
+      }
+    } finally {
+      if (mounted) setState(() => _isSavingPdf = false);
+    }
+  }
+
+  /// مشاركة ملف PDF
+  Future<void> _sharePdf({
+    required String shopName,
+    required String address1,
+    required String address2,
+    required String phone,
+    required String footer,
+    required BillingState billingState,
+    required double subtotal,
+    required double total,
+    required double change,
+    required double taxAmount,
+  }) async {
+    setState(() => _isSavingPdf = true);
+    try {
+      final invoiceNumber =
+          'INV-${DateTime.now().millisecondsSinceEpoch.toString().substring(7)}';
+
+      final bytes = await _generateInvoicePdf(
+        shopName: shopName,
+        address1: address1,
+        address2: address2,
+        phone: phone,
+        footer: footer,
+        billingState: billingState,
+        subtotal: subtotal,
+        discountAmount: _discountAmount,
+        taxAmount: taxAmount,
+        total: total,
+        change: change,
+        invoiceNumber: invoiceNumber,
+      );
+
+      // مشاركة الملف
+      await Printing.sharePdf(
+        bytes: bytes,
+        filename: 'فاتورة_$invoiceNumber.pdf',
+      );
+
+      if (mounted) {
+        _saveInvoice(context, billingState);
+        context.read<BillingBloc>().add(ClearCartEvent());
+        context.go('/scan');
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+          content: Text('فشل مشاركة PDF: $e'),
+          backgroundColor: Colors.red,
+        ));
+      }
+    } finally {
+      if (mounted) setState(() => _isSavingPdf = false);
+    }
   }
 
   String _paymentLabel(PaymentMethod m) {

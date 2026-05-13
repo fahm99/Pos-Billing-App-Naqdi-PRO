@@ -1,3 +1,4 @@
+import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
@@ -25,7 +26,7 @@ class CustomAppBar extends StatelessWidget implements PreferredSizeWidget {
 
         if (state is ShopLoaded) {
           shopName = state.shop.name.isNotEmpty ? state.shop.name : 'نقدي';
-          shopLogo = state.shop.currencyLogo;
+          shopLogo = state.shop.shopLogo;
         }
 
         return Container(
@@ -49,39 +50,7 @@ class CustomAppBar extends StatelessWidget implements PreferredSizeWidget {
                   child: Row(
                     mainAxisAlignment: MainAxisAlignment.start,
                     children: [
-                      if (shopLogo.isNotEmpty)
-                        Container(
-                          width: 40,
-                          height: 40,
-                          decoration: BoxDecoration(
-                            shape: BoxShape.circle,
-                            image: DecorationImage(
-                              image: NetworkImage(shopLogo),
-                              fit: BoxFit.cover,
-                            ),
-                          ),
-                        )
-                      else
-                        Container(
-                          width: 40,
-                          height: 40,
-                          decoration: const BoxDecoration(
-                            color: Color(0xFF00A77E),
-                            shape: BoxShape.circle,
-                          ),
-                          child: Center(
-                            child: Text(
-                              shopName.isNotEmpty
-                                  ? shopName.substring(0, 1).toUpperCase()
-                                  : 'ن',
-                              style: const TextStyle(
-                                color: Colors.white,
-                                fontWeight: FontWeight.bold,
-                                fontSize: 18,
-                              ),
-                            ),
-                          ),
-                        ),
+                      _buildShopLogo(shopLogo, shopName),
                       const SizedBox(width: 12),
                       Expanded(
                         child: Text(
@@ -141,6 +110,70 @@ class CustomAppBar extends StatelessWidget implements PreferredSizeWidget {
           ),
         );
       },
+    );
+  }
+
+  Widget _buildShopLogo(String shopLogo, String shopName) {
+    // إذا كان هناك شعار
+    if (shopLogo.isNotEmpty) {
+      // تحقق إذا كان المسار محلي (ملف)
+      if (!shopLogo.startsWith('http')) {
+        return Container(
+          width: 40,
+          height: 40,
+          decoration: BoxDecoration(
+            shape: BoxShape.circle,
+            color: Colors.grey[100],
+          ),
+          child: ClipOval(
+            child: Image.file(
+              File(shopLogo),
+              width: 40,
+              height: 40,
+              fit: BoxFit.cover,
+              errorBuilder: (context, error, stackTrace) =>
+                  _buildDefaultLogo(shopName),
+            ),
+          ),
+        );
+      } else {
+        // رابط خارجي
+        return Container(
+          width: 40,
+          height: 40,
+          decoration: BoxDecoration(
+            shape: BoxShape.circle,
+            image: DecorationImage(
+              image: NetworkImage(shopLogo),
+              fit: BoxFit.cover,
+            ),
+          ),
+        );
+      }
+    }
+
+    // الشعار الافتراضي
+    return _buildDefaultLogo(shopName);
+  }
+
+  Widget _buildDefaultLogo(String shopName) {
+    return Container(
+      width: 40,
+      height: 40,
+      decoration: const BoxDecoration(
+        color: Color(0xFF00A77E),
+        shape: BoxShape.circle,
+      ),
+      child: Center(
+        child: Text(
+          shopName.isNotEmpty ? shopName.substring(0, 1).toUpperCase() : 'ن',
+          style: const TextStyle(
+            color: Colors.white,
+            fontWeight: FontWeight.bold,
+            fontSize: 18,
+          ),
+        ),
+      ),
     );
   }
 }

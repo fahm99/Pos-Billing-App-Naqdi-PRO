@@ -5,6 +5,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
 import 'package:image_picker/image_picker.dart';
+import 'package:path_provider/path_provider.dart';
 import '../../domain/entities/shop.dart';
 import '../bloc/shop_bloc.dart';
 import '../../../../core/theme/app_theme.dart';
@@ -33,6 +34,7 @@ class _ShopDetailsPageState extends State<ShopDetailsPage> {
   late TextEditingController _defaultTaxController;
   File? _shopLogoFile;
   String? _shopLogoUrl;
+  bool _isSaving = false;
 
   @override
   void initState() {
@@ -108,8 +110,43 @@ class _ShopDetailsPageState extends State<ShopDetailsPage> {
     });
   }
 
-  void _saveShop() {
+  /// حفظ صورة الشعار محلياً وإرجاع المسار
+  Future<String?> _saveLogoLocally(File logoFile) async {
+    try {
+      final directory = await getApplicationDocumentsDirectory();
+      final logosDir = Directory('${directory.path}/shop_logos');
+
+      if (!await logosDir.exists()) {
+        await logosDir.create(recursive: true);
+      }
+
+      final fileName = 'shop_logo_${DateTime.now().millisecondsSinceEpoch}.png';
+      final savedPath = '${logosDir.path}/$fileName';
+
+      // نسخ الملف إلى المسار الجديد
+      final savedFile = await logoFile.copy(savedPath);
+
+      return savedFile.path;
+    } catch (e) {
+      debugPrint('Error saving logo: $e');
+      return null;
+    }
+  }
+
+  void _saveShop() async {
     if (_formKey.currentState!.validate()) {
+      setState(() => _isSaving = true);
+
+      String shopLogoPath = _shopLogoController.text;
+
+      // إذا تم اختيار صورة جديدة، احفظها محلياً
+      if (_shopLogoFile != null) {
+        final savedPath = await _saveLogoLocally(_shopLogoFile!);
+        if (savedPath != null) {
+          shopLogoPath = savedPath;
+        }
+      }
+
       final shop = Shop(
         name: _nameController.text,
         addressLine1: _address1Controller.text,
@@ -124,11 +161,14 @@ class _ShopDetailsPageState extends State<ShopDetailsPage> {
             ? _currencySymbolController.text
             : 'ر.س',
         currencyLogo: _currencyLogoController.text,
-        shopLogo: _shopLogoController.text,
+        shopLogo: shopLogoPath,
         defaultTaxPercent: double.tryParse(_defaultTaxController.text) ?? 0,
       );
 
-      context.read<ShopBloc>().add(UpdateShopEvent(shop));
+      if (mounted) {
+        context.read<ShopBloc>().add(UpdateShopEvent(shop));
+        setState(() => _isSaving = false);
+      }
     }
   }
 
@@ -195,7 +235,7 @@ class _ShopDetailsPageState extends State<ShopDetailsPage> {
                       validator: AppValidators.required('مطلوب'),
                     ),
                     const SizedBox(height: 15),
-                    const InputLabel(text: 'العنوان - ا��سطر الثاني (اختياري)'),
+                    const InputLabel(text: 'العنوان - السطر الثاني (اختياري)'),
                     _buildTextField(
                       controller: _address2Controller,
                       hint: 'الرمز البريدي',
@@ -241,9 +281,9 @@ class _ShopDetailsPageState extends State<ShopDetailsPage> {
           },
         ),
         bottomNavigationBar: PrimaryButton(
-          onPressed: _saveShop,
+          onPressed: _isSaving ? null : _saveShop,
           icon: Icons.save,
-          label: 'حفظ البيانات',
+          label: _isSaving ? 'جاري الحفظ...' : 'حفظ البيانات',
         ));
   }
 
@@ -312,14 +352,25 @@ class _ShopDetailsPageState extends State<ShopDetailsPage> {
                         children: [
                           ClipRRect(
                             borderRadius: BorderRadius.circular(16),
-                            child: Image.network(
-                              _shopLogoUrl!,
-                              width: 100,
-                              height: 100,
-                              fit: BoxFit.cover,
-                              errorBuilder: (context, error, stackTrace) =>
-                                  _buildPlaceholderIcon(),
-                            ),
+                            child: _shopLogoUrl!.startsWith('http')
+                                ? Image.network(
+                                    _shopLogoUrl!,
+                                    width: 100,
+                                    height: 100,
+                                    fit: BoxFit.cover,
+                                    errorBuilder:
+                                        (context, error, stackTrace) =>
+                                            _buildPlaceholderIcon(),
+                                  )
+                                : Image.file(
+                                    File(_shopLogoUrl!),
+                                    width: 100,
+                                    height: 100,
+                                    fit: BoxFit.cover,
+                                    errorBuilder:
+                                        (context, error, stackTrace) =>
+                                            _buildPlaceholderIcon(),
+                                  ),
                           ),
                           Positioned(
                             top: 4,

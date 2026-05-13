@@ -7,7 +7,7 @@
     <uses-permission android:name="android.permission.ACCESS_FINE_LOCATION"/>
     
     <application
-        android:label="naqdi"
+        android:label="نقدي"
         android:name="${applicationName}"
         android:icon="@mipmap/ic_launcher">
         <activity

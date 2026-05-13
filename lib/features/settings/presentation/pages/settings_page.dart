@@ -1,3 +1,4 @@
+import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
@@ -38,41 +39,25 @@ class _SettingsPageState extends State<SettingsPage> {
               padding: const EdgeInsets.symmetric(vertical: 32, horizontal: 24),
               child: BlocBuilder<ShopBloc, ShopState>(
                 builder: (context, state) {
-                  String shopName = 'Elite Groceries';
-                  String initials = 'EG';
+                  String shopName = 'نقدي';
+                  String initials = 'ن';
+                  String shopLogo = '';
+
                   if (state is ShopLoaded && state.shop.name.isNotEmpty) {
                     shopName = state.shop.name;
+                    shopLogo = state.shop.shopLogo;
                     final parts = shopName.split(' ');
                     initials = parts
                         .take(2)
                         .map((p) => p.isNotEmpty ? p[0].toUpperCase() : '')
                         .join('');
-                    if (initials.isEmpty) initials = 'S';
+                    if (initials.isEmpty) initials = 'ن';
                   }
 
                   return Column(
                     children: [
-                      Container(
-                        width: 96,
-                        height: 96,
-                        decoration: BoxDecoration(
-                            color: AppTheme.primaryColor,
-                            shape: BoxShape.circle,
-                            boxShadow: [
-                              BoxShadow(
-                                color: AppTheme.primaryColor.withOpacity(0.2),
-                                blurRadius: 15,
-                                spreadRadius: 5,
-                              )
-                            ]),
-                        alignment: Alignment.center,
-                        child: Text(initials,
-                            style: const TextStyle(
-                                color: Colors.white,
-                                fontSize: 32,
-                                fontWeight: FontWeight.bold,
-                                letterSpacing: -1)),
-                      ),
+                      // Shop Logo
+                      _buildShopLogo(shopLogo, initials),
                       const SizedBox(height: 16),
                       Text(shopName.toUpperCase(),
                           style: const TextStyle(
@@ -172,6 +157,87 @@ class _SettingsPageState extends State<SettingsPage> {
           ],
         ),
       ),
+    );
+  }
+
+  Widget _buildShopLogo(String shopLogo, String initials) {
+    // إذا كان هناك شعار محفوظ
+    if (shopLogo.isNotEmpty) {
+      // تحقق إذا كان المسار محلي (ملف)
+      if (!shopLogo.startsWith('http')) {
+        return Container(
+          width: 96,
+          height: 96,
+          decoration: BoxDecoration(
+            shape: BoxShape.circle,
+            boxShadow: [
+              BoxShadow(
+                color: AppTheme.primaryColor.withOpacity(0.2),
+                blurRadius: 15,
+                spreadRadius: 5,
+              )
+            ],
+          ),
+          child: ClipOval(
+            child: Image.file(
+              File(shopLogo),
+              width: 96,
+              height: 96,
+              fit: BoxFit.cover,
+              errorBuilder: (context, error, stackTrace) =>
+                  _buildDefaultLogo(initials),
+            ),
+          ),
+        );
+      } else {
+        // رابط خارجي
+        return Container(
+          width: 96,
+          height: 96,
+          decoration: BoxDecoration(
+            shape: BoxShape.circle,
+            image: DecorationImage(
+              image: NetworkImage(shopLogo),
+              fit: BoxFit.cover,
+            ),
+            boxShadow: [
+              BoxShadow(
+                color: AppTheme.primaryColor.withOpacity(0.2),
+                blurRadius: 15,
+                spreadRadius: 5,
+              )
+            ],
+          ),
+        );
+      }
+    }
+
+    // الشعار الافتراضي
+    return _buildDefaultLogo(initials);
+  }
+
+  Widget _buildDefaultLogo(String initials) {
+    return Container(
+      width: 96,
+      height: 96,
+      decoration: BoxDecoration(
+        color: AppTheme.primaryColor,
+        shape: BoxShape.circle,
+        boxShadow: [
+          BoxShadow(
+            color: AppTheme.primaryColor.withOpacity(0.2),
+            blurRadius: 15,
+            spreadRadius: 5,
+          )
+        ],
+      ),
+      alignment: Alignment.center,
+      child: Text(initials,
+          style: const TextStyle(
+              color: Colors.white,
+              fontSize: 32,
+              fontWeight: FontWeight.bold,
+              letterSpacing: -1)),
     );
   }
 
