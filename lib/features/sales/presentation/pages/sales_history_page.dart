@@ -41,11 +41,7 @@ class _SalesHistoryPageState extends State<SalesHistoryPage>
     return Scaffold(
       appBar: AppBar(
         title: const Text('المبيعات'),
-        leading: IconButton(
-          icon: Icon(Icons.chevron_left,
-              size: 28, color: Theme.of(context).primaryColor),
-          onPressed: () => context.pop(),
-        ),
+        automaticallyImplyLeading: false,
         bottom: TabBar(
           controller: _tabController,
           labelColor: AppTheme.primaryColor,

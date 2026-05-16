@@ -13,7 +13,6 @@ import '../../features/product/domain/entities/product.dart';
 import '../../features/sales/presentation/pages/sales_history_page.dart';
 import '../../features/sales/presentation/pages/invoice_detail_page.dart';
 import '../../features/sales/domain/entities/invoice.dart';
-import '../../features/customers/presentation/pages/customers_page.dart';
 import '../../features/suppliers/presentation/pages/suppliers_page.dart';
 import '../../features/inventory/presentation/pages/inventory_page.dart';
 import '../../features/donation/presentation/pages/donation_page.dart';
@@ -68,10 +67,10 @@ final router = GoRouter(
             ),
           ],
         ),
-        // Customers Tab
+        // Inventory Tab
         GoRoute(
-          path: '/customers',
-          builder: (context, state) => const CustomersPage(),
+          path: '/inventory',
+          builder: (context, state) => const InventoryPage(),
         ),
         // Settings Tab
         GoRoute(
@@ -89,11 +88,6 @@ final router = GoRouter(
     GoRoute(
       path: '/checkout',
       builder: (context, state) => const CheckoutPage(),
-    ),
-    // Inventory (accessible from settings/products)
-    GoRoute(
-      path: '/inventory',
-      builder: (context, state) => const InventoryPage(),
     ),
     // Suppliers (accessible from settings)
     GoRoute(

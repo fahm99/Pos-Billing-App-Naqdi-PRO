@@ -51,7 +51,7 @@ class BillingBloc extends Bloc<BillingEvent, BillingState> {
     if (newQty > event.product.stock) {
       emit(state.copyWith(
           error:
-              'الكمية المطلوبة (${newQty}) أكبر من المتوفر (${event.product.stock})'));
+              'الكمية المطلوبة ($newQty) أكبر من المتوفر (${event.product.stock})'));
       return;
     }
 
