@@ -1,0 +1,478 @@
+<!DOCTYPE html>
+<html class="scroll-smooth" dir="rtl" lang="ar">
+<head>
+    <meta charset="utf-8"/>
+    <meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+    <title>Naqdi PRO | نقدي برو - أدر تجارتك بذكاء ومجاناً</title>
+    <meta name="description" content="نظام نقاط البيع والفواتير الأكثر سهولة وكفاءة. يعمل بدون إنترنت، مجاني 100%، مع خصوصية تامة لبياناتك."/>
+    <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@400;500;700;900&family=Noto+Sans+Arabic:wght@400;500;700;900&display=swap" rel="stylesheet"/>
+    <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" rel="stylesheet"/>
+    <script>
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    colors: {
+                        "primary": "#006c50",
+                        "primary-container": "#00a77e",
+                        "on-primary": "#ffffff",
+                        "surface": "#fcf9f8",
+                        "surface-container": "#f0eded",
+                        "surface-container-low": "#f6f3f2",
+                        "on-surface": "#1c1b1b",
+                        "on-surface-variant": "#3d4a43",
+                        "outline-variant": "#bccac1",
+                        "secondary": "#755b00",
+                        "secondary-container": "#fed977",
+                    },
+                    fontFamily: {
+                        sans: ["Noto Sans Arabic", "Be Vietnam Pro", "sans-serif"],
+                    },
+                    animation: {
+                        'float': 'float 6s ease-in-out infinite',
+                        'pulse-slow': 'pulse 3s cubic-bezier(0.4, 0, 0.6, 1) infinite',
+                        'fade-in-up': 'fadeInUp 0.8s ease-out forwards',
+                        'fade-in': 'fadeIn 0.6s ease-out forwards',
+                    },
+                    keyframes: {
+                        float: {
+                            '0%, 100%': { transform: 'translateY(0) rotate(0deg)' },
+                            '50%': { transform: 'translateY(-15px) rotate(1deg)' },
+                        },
+                        fadeInUp: {
+                            '0%': { opacity: '0', transform: 'translateY(30px)' },
+                            '100%': { opacity: '1', transform: 'translateY(0)' },
+                        },
+                        fadeIn: {
+                            '0%': { opacity: '0' },
+                            '100%': { opacity: '1' },
+                        }
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+        }
+        .glass {
+            background: rgba(252, 249, 248, 0.85);
+            backdrop-filter: blur(16px);
+            -webkit-backdrop-filter: blur(16px);
+            border-bottom: 1px solid rgba(255, 255, 255, 0.3);
+        }
+        .hero-gradient-text {
+            background: linear-gradient(135deg, #006c50 0%, #00a77e 50%, #00d4a0 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+        .phone-mockup {
+            filter: drop-shadow(0 50px 80px rgba(0, 108, 80, 0.25));
+        }
+        .feature-card {
+            transition: all 0.4s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+        }
+        .feature-card:hover {
+            transform: translateY(-8px);
+            box-shadow: 0 25px 50px -12px rgba(0, 108, 80, 0.15);
+        }
+        .btn-primary {
+            background: linear-gradient(135deg, #006c50 0%, #00a77e 100%);
+            transition: all 0.3s ease;
+        }
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 20px 40px rgba(0, 108, 80, 0.3);
+        }
+        .animate-delay-100 { animation-delay: 0.1s; }
+        .animate-delay-200 { animation-delay: 0.2s; }
+        .animate-delay-300 { animation-delay: 0.3s; }
+        .animate-delay-400 { animation-delay: 0.4s; }
+        .animate-delay-500 { animation-delay: 0.5s; }
+        .animate-delay-600 { animation-delay: 0.6s; }
+        
+        /* Smooth scroll for mobile */
+        @media (max-width: 768px) {
+            .scroll-smooth {
+                scroll-behavior: auto;
+            }
+        }
+    </style>
+</head>
+<body class="font-sans text-on-surface bg-surface overflow-x-hidden selection:bg-primary/20 selection:text-primary">
+
+    <!-- Navigation -->
+    <header class="glass fixed top-0 w-full z-[100] h-16 md:h-20 flex items-center px-4 sm:px-6 md:px-8 lg:px-12">
+        <div class="max-w-7xl mx-auto w-full flex flex-row-reverse justify-between items-center">
+            <!-- Logo -->
+            <div class="flex items-center gap-2 md:gap-3">
+                <div class="w-9 h-9 md:w-10 md:h-10 rounded-xl overflow-hidden flex items-center justify-center bg-primary/10">
+                    <img alt="Naqdi Logo" class="w-full h-full object-cover" src="assets/naqdilogo.jpg"/>
+                </div>
+                <h1 class="text-xl md:text-2xl font-black text-primary tracking-tight">نقدي برو</h1>
+            </div>
+            
+            <!-- CTA Button -->
+            <a href="#download" class="bg-primary text-on-primary px-4 md:px-6 py-2 md:py-2.5 rounded-full font-bold text-sm md:text-base hover:shadow-lg hover:shadow-primary/30 transition-all active:scale-95 flex items-center gap-2">
+                <span class="material-symbols-outlined text-lg md:text-xl">download</span>
+                <span class="hidden sm:inline">تحميل الآن</span>
+                <span class="sm:hidden">تحميل</span>
+            </a>
+        </div>
+    </header>
+
+    <!-- Main Content -->
+    <main class="pt-16 md:pt-20">
+        
+        <!-- Hero Section - Single Screen -->
+        <section class="relative min-h-screen flex flex-col justify-center overflow-hidden">
+            
+            <!-- Background Decorations -->
+            <div class="absolute top-0 right-0 w-[300px] md:w-[500px] h-[300px] md:h-[500px] bg-primary/5 rounded-full blur-[80px] md:blur-[120px] -z-10"></div>
+            <div class="absolute bottom-0 left-0 w-[200px] md:w-[400px] h-[200px] md:h-[400px] bg-secondary-container/15 rounded-full blur-[60px] md:blur-[100px] -z-10"></div>
+            <div class="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] md:w-[900px] h-[600px] md:h-[900px] bg-primary/3 rounded-full blur-[100px] -z-10"></div>
+            
+            <div class="max-w-7xl mx-auto px-4 sm:px-6 md:px-8 lg:px-12 py-8 md:py-16 lg:py-20 w-full">
+                <div class="grid grid-cols-1 lg:grid-cols-12 gap-8 lg:gap-12 items-center">
+                    
+                    <!-- Content Side -->
+                    <div class="lg:col-span-5 xl:col-span-5 order-2 lg:order-1 space-y-6 md:space-y-8">
+                        
+                        <!-- Badge -->
+                        <div class="opacity-0 animate-fade-in-up animate-delay-100">
+                            <div class="inline-flex items-center gap-2 px-3 md:px-4 py-1.5 md:py-2 bg-primary/10 text-primary rounded-full border border-primary/20">
+                                <span class="relative flex h-2 w-2">
+                                    <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-primary opacity-75"></span>
+                                    <span class="relative inline-flex rounded-full h-2 w-2 bg-primary"></span>
+                                </span>
+                                <span class="text-xs md:text-sm font-bold">يعمل بدون إنترنت • مجاني 100%</span>
+                            </div>
+                        </div>
+                        
+                        <!-- Main Heading -->
+                        <div class="opacity-0 animate-fade-in-up animate-delay-200">
+                            <h2 class="text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-black leading-[1.15] md:leading-[1.2] hero-gradient-text">
+                                أدر تجارتك بذكاء مع نقدي برو
+                            </h2>
+                        </div>
+                        
+                        <!-- Description -->
+                        <div class="opacity-0 animate-fade-in-up animate-delay-300">
+                            <p class="text-base md:text-lg lg:text-xl text-on-surface-variant leading-relaxed max-w-lg">
+                                نظام نقاط البيع والفواتير الأكثر سهولة وكفاءة لنمو مشروعك. يحفظ بياناتك محلياً بخصوصية تامة، مجاني بالكامل دون أي رسوم.
+                            </p>
+                        </div>
+                        
+                        <!-- CTA Buttons -->
+                        <div class="opacity-0 animate-fade-in-up animate-delay-400 flex flex-col sm:flex-row flex-wrap gap-3 md:gap-4">
+                            <a href="#download" class="btn-primary animate-pulse-slow h-12 md:h-14 px-6 md:px-10 text-on-primary rounded-2xl font-black text-base md:text-lg flex items-center justify-center gap-2 md:gap-3">
+                                <span class="material-symbols-outlined text-xl md:text-2xl">download</span>
+                                تحميل مباشر (APK)
+                            </a>
+                            <button class="h-12 md:h-14 px-5 md:px-8 bg-white text-on-surface-variant border border-outline-variant/50 rounded-2xl font-bold text-base md:text-lg flex items-center justify-center gap-2 hover:bg-surface-container-low transition-all">
+                                <span class="material-symbols-outlined">play_circle</span>
+                                دليل الاستخدام
+                            </button>
+                        </div>
+                        
+                        <!-- Trust Badge -->
+                        <div class="opacity-0 animate-fade-in-up animate-delay-500 flex items-center gap-3 text-sm text-on-surface-variant/80 font-medium pt-2">
+                            <div class="flex -space-x-2 space-x-reverse">
+                                <div class="w-7 h-7 md:w-8 md:h-8 rounded-full border-2 border-surface bg-gradient-to-br from-primary/30 to-primary/50"></div>
+                                <div class="w-7 h-7 md:w-8 md:h-8 rounded-full border-2 border-surface bg-gradient-to-br from-primary/40 to-primary/60"></div>
+                                <div class="w-7 h-7 md:w-8 md:h-8 rounded-full border-2 border-surface bg-gradient-to-br from-primary/50 to-primary/70"></div>
+                            </div>
+                            <span>انضم لـ +10,000 تاجر يثقون بنا</span>
+                        </div>
+                    </div>
+                    
+                    <!-- Phone Mockup Side -->
+                    <div class="lg:col-span-7 xl:col-span-7 order-1 lg:order-2 flex justify-center lg:justify-center">
+                        <div class="relative w-full max-w-[280px] sm:max-w-[320px] md:max-w-[380px] lg:max-w-[420px] xl:max-w-[480px] opacity-0 animate-fade-in animate-delay-200">
+                            <!-- Glow Effect -->
+                            <div class="absolute inset-0 bg-gradient-to-br from-primary/20 to-secondary-container/20 blur-[40px] md:blur-[60px] rounded-full scale-75 -z-10"></div>
+                            
+                            <!-- Phone Frame -->
+                            <div class="animate-float phone-mockup relative">
+                                <div class="relative bg-white rounded-[2.5rem] md:rounded-[3rem] p-2 md:p-3 shadow-2xl">
+                                    <!-- Screen -->
+                                    <div class="relative overflow-hidden rounded-[2rem] md:rounded-[2.25rem] bg-surface">
+                                        <!-- Status Bar -->
+                                        <div class="h-6 md:h-8 bg-surface flex items-center justify-center">
+                                            <div class="w-20 md:w-24 h-5 md:h-6 bg-on-surface/10 rounded-full"></div>
+                                        </div>
+                                        
+                                        <!-- App Screenshot -->
+                                        <img 
+                                            alt="تطبيق نقدي برو - الشاشة الرئيسية" 
+                                            class="w-full aspect-[9/16] object-cover object-top"
+                                            src="assets/screens/home.jpg"
+                                            loading="eager"
+                                        />
+                                    </div>
+                                </div>
+                                
+                                <!-- Decorative Elements -->
+                                <div class="absolute -top-4 -right-4 w-8 h-8 bg-secondary-container/50 rounded-full blur-sm"></div>
+                                <div class="absolute -bottom-2 -left-2 w-6 h-6 bg-primary/30 rounded-full blur-sm"></div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Scroll Indicator -->
+            <div class="absolute bottom-4 md:bottom-8 left-1/2 -translate-x-1/2 opacity-0 animate-fade-in animate-delay-600">
+                <a href="#features" class="flex flex-col items-center gap-2 text-on-surface-variant/60 hover:text-primary transition-colors">
+                    <span class="text-xs font-medium">اكتشف المزيد</span>
+                    <span class="material-symbols-outlined animate-bounce">keyboard_arrow_down</span>
+                </a>
+            </div>
+        </section>
+
+        <!-- Features Grid Section -->
+        <section id="features" class="py-16 md:py-24 lg:py-32 bg-gradient-to-b from-surface to-surface-container-low/30">
+            <div class="max-w-7xl mx-auto px-4 sm:px-6 md:px-8 lg:px-12">
+                
+                <!-- Section Header -->
+                <div class="text-center max-w-3xl mx-auto mb-12 md:mb-16 lg:mb-20">
+                    <h3 class="text-2xl sm:text-3xl md:text-4xl font-black text-on-surface mb-3 md:mb-4">حلول متكاملة لنجاح عملك</h3>
+                    <p class="text-on-surface-variant text-base md:text-lg">صممنا نقدي برو ليكون شريكك التقني في كل خطوة، مع التركيز على السرعة والخصوصية.</p>
+                </div>
+                
+                <!-- Features Grid -->
+                <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 md:gap-6 lg:gap-8">
+                    
+                    <!-- Feature 1: Invoice Management -->
+                    <div class="feature-card bg-white p-5 md:p-6 lg:p-8 rounded-2xl md:rounded-3xl border border-outline-variant/30 shadow-sm">
+                        <div class="w-12 h-12 md:w-14 md:h-14 bg-primary/10 rounded-xl md:rounded-2xl flex items-center justify-center mb-4 md:mb-6 text-primary">
+                            <span class="material-symbols-outlined text-2xl md:text-3xl">receipt_long</span>
+                        </div>
+                        <h4 class="text-lg md:text-xl font-bold text-on-surface mb-2 md:mb-3">إدارة الفواتير</h4>
+                        <p class="text-sm md:text-base text-on-surface-variant leading-relaxed">إصدار فواتير ضريبية بلمسة واحدة متوافقة مع متطلبات الزكاة والدخل، مع دعم QR Code.</p>
+                    </div>
+                    
+                    <!-- Feature 2: Smart Inventory -->
+                    <div class="feature-card bg-white p-5 md:p-6 lg:p-8 rounded-2xl md:rounded-3xl border border-outline-variant/30 shadow-sm">
+                        <div class="w-12 h-12 md:w-14 md:h-14 bg-blue-100 rounded-xl md:rounded-2xl flex items-center justify-center mb-4 md:mb-6 text-blue-600">
+                            <span class="material-symbols-outlined text-2xl md:text-3xl">inventory_2</span>
+                        </div>
+                        <h4 class="text-lg md:text-xl font-bold text-on-surface mb-2 md:mb-3">المخزون الذكي</h4>
+                        <p class="text-sm md:text-base text-on-surface-variant leading-relaxed">تنبيهات نقص الكميات، جرد سريع، ومتابعة حركة الأصناف بدقة متناهية.</p>
+                    </div>
+                    
+                    <!-- Feature 3: Reports & Profits -->
+                    <div class="feature-card bg-white p-5 md:p-6 lg:p-8 rounded-2xl md:rounded-3xl border border-outline-variant/30 shadow-sm">
+                        <div class="w-12 h-12 md:w-14 md:h-14 bg-secondary-container/30 rounded-xl md:rounded-2xl flex items-center justify-center mb-4 md:mb-6 text-secondary">
+                            <span class="material-symbols-outlined text-2xl md:text-3xl">monitoring</span>
+                        </div>
+                        <h4 class="text-lg md:text-xl font-bold text-on-surface mb-2 md:mb-3">تقارير وأرباح</h4>
+                        <p class="text-sm md:text-base text-on-surface-variant leading-relaxed">حلل مبيعاتك اليومية والشهرية واعرف أكثر المنتجات ربحاً برسوم بيانية واضحة.</p>
+                    </div>
+                    
+                    <!-- Feature 4: Barcode Scanner -->
+                    <div class="feature-card bg-white p-5 md:p-6 lg:p-8 rounded-2xl md:rounded-3xl border border-outline-variant/30 shadow-sm">
+                        <div class="w-12 h-12 md:w-14 md:h-14 bg-purple-100 rounded-xl md:rounded-2xl flex items-center justify-center mb-4 md:mb-6 text-purple-600">
+                            <span class="material-symbols-outlined text-2xl md:text-3xl">qr_code_scanner</span>
+                        </div>
+                        <h4 class="text-lg md:text-xl font-bold text-on-surface mb-2 md:mb-3">قارئ الباركود</h4>
+                        <p class="text-sm md:text-base text-on-surface-variant leading-relaxed">مسح سريع للمنتجات بالكاميرا أو قارئ خارجي، مع إضافة تلقائية للسلة.</p>
+                    </div>
+                    
+                    <!-- Feature 5: Customer Management -->
+                    <div class="feature-card bg-white p-5 md:p-6 lg:p-8 rounded-2xl md:rounded-3xl border border-outline-variant/30 shadow-sm">
+                        <div class="w-12 h-12 md:w-14 md:h-14 bg-rose-100 rounded-xl md:rounded-2xl flex items-center justify-center mb-4 md:mb-6 text-rose-600">
+                            <span class="material-symbols-outlined text-2xl md:text-3xl">group</span>
+                        </div>
+                        <h4 class="text-lg md:text-xl font-bold text-on-surface mb-2 md:mb-3">إدارة العملاء</h4>
+                        <p class="text-sm md:text-base text-on-surface-variant leading-relaxed">سجل عملائك وتابع حساباتهم، مع تقارير مفصلة لكل عميل.</p>
+                    </div>
+                    
+                    <!-- Feature 6: Offline Mode -->
+                    <div class="feature-card bg-white p-5 md:p-6 lg:p-8 rounded-2xl md:rounded-3xl border border-outline-variant/30 shadow-sm">
+                        <div class="w-12 h-12 md:w-14 md:h-14 bg-green-100 rounded-xl md:rounded-2xl flex items-center justify-center mb-4 md:mb-6 text-green-600">
+                            <span class="material-symbols-outlined text-2xl md:text-3xl">cloud_off</span>
+                        </div>
+                        <h4 class="text-lg md:text-xl font-bold text-on-surface mb-2 md:mb-3">يعمل بدون إنترنت</h4>
+                        <p class="text-sm md:text-base text-on-surface-variant leading-relaxed">كل بياناتك محفوظة محلياً على جهازك بخصوصية تامة، بدون الحاجة لاتصال دائم.</p>
+                    </div>
+                </div>
+                
+                <!-- Additional Features List -->
+                <div class="mt-12 md:mt-16 grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3 md:gap-4">
+                    <div class="flex items-center gap-2 text-sm md:text-base text-on-surface-variant">
+                        <span class="material-symbols-outlined text-primary text-lg md:text-xl">check_circle</span>
+                        طباعة الفواتير
+                    </div>
+                    <div class="flex items-center gap-2 text-sm md:text-base text-on-surface-variant">
+                        <span class="material-symbols-outlined text-primary text-lg md:text-xl">check_circle</span>
+                        إدارة الموردين
+                    </div>
+                    <div class="flex items-center gap-2 text-sm md:text-base text-on-surface-variant">
+                        <span class="material-symbols-outlined text-primary text-lg md:text-xl">check_circle</span>
+                        عدة فروع
+                    </div>
+                    <div class="flex items-center gap-2 text-sm md:text-base text-on-surface-variant">
+                        <span class="material-symbols-outlined text-primary text-lg md:text-xl">check_circle</span>
+                        النسخ الاحتياطي
+                    </div>
+                    <div class="flex items-center gap-2 text-sm md:text-base text-on-surface-variant">
+                        <span class="material-symbols-outlined text-primary text-lg md:text-xl">check_circle</span>
+                        وضع الأدمن/العامل
+                    </div>
+                    <div class="flex items-center gap-2 text-sm md:text-base text-on-surface-variant">
+                        <span class="material-symbols-outlined text-primary text-lg md:text-xl">check_circle</span>
+                        تقارير الضريبة
+                    </div>
+                    <div class="flex items-center gap-2 text-sm md:text-base text-on-surface-variant">
+                        <span class="material-symbols-outlined text-primary text-lg md:text-xl">check_circle</span>
+                        نظام التبرعات
+                    </div>
+                    <div class="flex items-center gap-2 text-sm md:text-base text-on-surface-variant">
+                        <span class="material-symbols-outlined text-primary text-lg md:text-xl">check_circle</span>
+                        دعم عربي كامل
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Download CTA Section -->
+        <section id="download" class="py-16 md:py-24 lg:py-32 px-4 sm:px-6 md:px-8 lg:px-12">
+            <div class="max-w-5xl mx-auto bg-gradient-to-br from-primary via-primary to-primary-container rounded-[2rem] md:rounded-[3rem] lg:rounded-[4rem] p-6 sm:p-8 md:p-12 lg:p-16 text-center text-on-primary relative overflow-hidden shadow-2xl">
+                
+                <!-- Background Decoration -->
+                <div class="absolute top-0 right-0 w-32 md:w-64 h-32 md:h-64 bg-white/10 rounded-full blur-2xl md:blur-3xl -translate-y-1/2 translate-x-1/2"></div>
+                <div class="absolute bottom-0 left-0 w-24 md:w-48 h-24 md:h-48 bg-secondary-container/20 rounded-full blur-xl md:blur-2xl translate-y-1/2 -translate-x-1/2"></div>
+                
+                <div class="relative z-10 space-y-4 md:space-y-6 lg:space-y-8">
+                    <h3 class="text-2xl sm:text-3xl md:text-4xl lg:text-5xl font-black leading-tight max-w-3xl mx-auto">ابدأ استخدام أقوى نظام نقاط بيع مجاني الآن</h3>
+                    <p class="text-on-primary/85 text-base md:text-lg lg:text-xl max-w-2xl mx-auto font-medium">
+                        انضم لآلاف التجار الذين قرروا حماية بياناتهم وتوفير تكاليف الأنظمة السحابية.
+                    </p>
+                    
+                    <div class="flex flex-col sm:flex-row justify-center gap-3 md:gap-4 pt-2 md:pt-4">
+                        <button class="h-12 md:h-14 lg:h-16 px-8 md:px-12 bg-white text-primary rounded-xl md:rounded-2xl font-black text-base md:text-lg hover:shadow-2xl transition-all active:scale-95 flex items-center justify-center gap-2">
+                            <span class="material-symbols-outlined">android</span>
+                            تحميل للأندرويد
+                        </button>
+                        <button class="h-12 md:h-14 lg:h-16 px-6 md:px-10 bg-white/15 text-on-primary border border-white/30 rounded-xl md:rounded-2xl font-bold text-base md:text-lg hover:bg-white/20 transition-all flex items-center justify-center gap-2">
+                            <span class="material-symbols-outlined">apple</span>
+                            نسخة iOS قريباً
+                        </button>
+                    </div>
+                    
+                    <div class="flex flex-wrap justify-center gap-4 md:gap-6 text-xs md:text-sm font-bold opacity-70 pt-2">
+                        <span class="flex items-center gap-1">
+                            <span class="material-symbols-outlined text-base md:text-lg">verified</span>
+                            مجاني 100%
+                        </span>
+                        <span class="flex items-center gap-1">
+                            <span class="material-symbols-outlined text-base md:text-lg">lock</span>
+                            خصوصية تامة
+                        </span>
+                        <span class="flex items-center gap-1">
+                            <span class="material-symbols-outlined text-base md:text-lg">cloud_off</span>
+                            بدون إنترنت
+                        </span>
+                    </div>
+                </div>
+            </div>
+        </section>
+    </main>
+
+    <!-- Footer -->
+    <footer class="bg-surface-container py-8 md:py-12 px-4 sm:px-6 md:px-8 lg:px-12 border-t border-outline-variant/30">
+        <div class="max-w-7xl mx-auto">
+            <div class="flex flex-col md:flex-row justify-between items-center gap-6 md:gap-8">
+                
+                <!-- Logo & Info -->
+                <div class="flex flex-col md:flex-row items-center gap-3 md:gap-4 text-center md:text-right">
+                    <div class="flex items-center gap-2">
+                        <div class="w-8 h-8 rounded-lg overflow-hidden bg-primary/10">
+                            <img alt="Naqdi Logo" class="w-full h-full object-cover" src="assets/naqdilogo.jpg"/>
+                        </div>
+                        <span class="text-xl font-black text-primary">نقدي برو</span>
+                    </div>
+                    <p class="text-sm text-on-surface-variant max-w-sm">
+                        النظام العربي الأول المصمم للتجار بعناية فائقة.
+                    </p>
+                </div>
+                
+                <!-- Links -->
+                <div class="flex flex-wrap justify-center gap-4 md:gap-8 text-sm text-on-surface-variant font-medium">
+                    <a class="hover:text-primary transition-colors" href="#">عن التطبيق</a>
+                    <a class="hover:text-primary transition-colors" href="#">الأسئلة الشائعة</a>
+                    <a class="hover:text-primary transition-colors" href="#">سياسة الخصوصية</a>
+                    <a class="hover:text-primary transition-colors" href="#">تواصل معنا</a>
+                </div>
+            </div>
+            
+            <!-- Copyright -->
+            <div class="mt-6 md:mt-8 pt-6 md:pt-8 border-t border-outline-variant/30 text-center">
+                <p class="text-xs md:text-sm text-on-surface-variant font-medium">
+                    © 2024 نقدي برو. جميع الحقوق محفوظة. يعمل محلياً، مجاني، ومتاح للجميع.
+                </p>
+            </div>
+        </div>
+    </footer>
+
+    <!-- JavaScript -->
+    <script>
+        // Sticky header background on scroll
+        const header = document.querySelector('header');
+        let lastScrollY = 0;
+        
+        window.addEventListener('scroll', () => {
+            const currentScrollY = window.scrollY;
+            
+            if (currentScrollY > 50) {
+                header.classList.add('shadow-lg');
+            } else {
+                header.classList.remove('shadow-lg');
+            }
+            
+            lastScrollY = currentScrollY;
+        }, { passive: true });
+        
+        // Smooth scroll for anchor links
+        document.querySelectorAll('a[href^="#"]').forEach(anchor => {
+            anchor.addEventListener('click', function (e) {
+                e.preventDefault();
+                const target = document.querySelector(this.getAttribute('href'));
+                if (target) {
+                    target.scrollIntoView({
+                        behavior: 'smooth',
+                        block: 'start'
+                    });
+                }
+            });
+        });
+        
+        // Intersection Observer for animations
+        const observerOptions = {
+            threshold: 0.1,
+            rootMargin: '0px 0px -50px 0px'
+        };
+        
+        const observer = new IntersectionObserver((entries) => {
+            entries.forEach(entry => {
+                if (entry.isIntersecting) {
+                    entry.target.style.opacity = '1';
+                    entry.target.style.transform = 'translateY(0)';
+                }
+            });
+        }, observerOptions);
+        
+        // Observe feature cards
+        document.querySelectorAll('.feature-card').forEach(card => {
+            card.style.opacity = '0';
+            card.style.transform = 'translateY(20px)';
+            card.style.transition = 'all 0.6s ease-out';
+            observer.observe(card);
+        });
+    </script>
+</body>
+</html>
