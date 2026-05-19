@@ -1,5 +1,3 @@
-import 'package:flutter/services.dart';
-
 // Placeholder class - feature coming soon
 class BluetoothDevice {
   final String name;
@@ -13,8 +11,6 @@ class PrinterHelper {
   PrinterHelper._internal();
 
   bool get isConnected => false;
-
-  static const _channel = MethodChannel('com.example.pos/permissions');
 
   Future<bool> checkPermission() async {
     return true;

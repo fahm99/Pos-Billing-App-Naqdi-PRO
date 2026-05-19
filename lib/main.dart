@@ -13,6 +13,7 @@ import 'features/settings/presentation/bloc/printer_event.dart';
 import 'features/sales/presentation/bloc/sales_bloc.dart';
 import 'features/customers/presentation/bloc/customer_bloc.dart';
 import 'features/suppliers/presentation/bloc/supplier_bloc.dart';
+import 'features/auth/presentation/cubit/auth_cubit.dart';
 import 'features/inventory/presentation/bloc/inventory_bloc.dart';
 
 void main() async {
@@ -46,6 +47,8 @@ class MyApp extends StatelessWidget {
         BlocProvider<SupplierBloc>(
             create: (context) =>
                 di.sl<SupplierBloc>()..add(LoadSuppliersEvent())),
+        BlocProvider<AuthCubit>(
+            create: (context) => di.sl<AuthCubit>()),
         BlocProvider<InventoryBloc>(
             create: (context) =>
                 di.sl<InventoryBloc>()..add(const LoadMovementsEvent())),

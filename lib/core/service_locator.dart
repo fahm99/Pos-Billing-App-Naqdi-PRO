@@ -22,6 +22,9 @@ import '../../features/suppliers/data/repositories/supplier_repository_impl.dart
 import '../../features/suppliers/domain/repositories/supplier_repository.dart';
 import '../../features/suppliers/domain/usecases/supplier_usecases.dart';
 import '../../features/suppliers/presentation/bloc/supplier_bloc.dart';
+import '../../features/auth/data/repositories/auth_repository_impl.dart';
+import '../../features/auth/domain/repositories/auth_repository.dart';
+import '../../features/auth/presentation/cubit/auth_cubit.dart';
 import '../../features/inventory/data/repositories/inventory_repository_impl.dart';
 import '../../features/inventory/domain/repositories/inventory_repository.dart';
 import '../../features/inventory/presentation/bloc/inventory_bloc.dart';
@@ -105,6 +108,10 @@ Future<void> init() async {
   sl.registerLazySingleton(() => UpdateSupplierUseCase(sl()));
   sl.registerLazySingleton(() => DeleteSupplierUseCase(sl()));
   sl.registerLazySingleton<SupplierRepository>(() => SupplierRepositoryImpl());
+
+  // ── Auth ──────────────────────────────────────────────────
+  sl.registerLazySingleton<AuthRepository>(() => AuthRepositoryImpl());
+  sl.registerFactory(() => AuthCubit(sl()));
 
   // ── Inventory ─────────────────────────────────────────────
   sl.registerFactory(() => InventoryBloc(

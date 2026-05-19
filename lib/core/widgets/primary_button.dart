@@ -4,6 +4,7 @@ class PrimaryButton extends StatelessWidget {
   final VoidCallback? onPressed;
   final String label;
   final IconData? icon;
+  final double? iconSize;
   final double elevation;
   final double borderRadius;
   final EdgeInsetsGeometry padding;
@@ -16,6 +17,7 @@ class PrimaryButton extends StatelessWidget {
     required this.onPressed,
     required this.label,
     this.icon,
+    this.iconSize,
     this.elevation = 8.0,
     this.borderRadius = 16.0,
     this.padding = const EdgeInsets.symmetric(vertical: 16),
@@ -52,7 +54,7 @@ class PrimaryButton extends StatelessWidget {
                     strokeWidth: 2,
                   ),
                 )
-              : Icon(icon),
+              : Icon(icon, size: iconSize),
           label: Text(
             label,
             style: textStyle,

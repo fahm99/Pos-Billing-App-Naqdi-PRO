@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:google_fonts/google_fonts.dart';
+import '../data/app_settings.dart';
 
 class SplashPage extends StatefulWidget {
   const SplashPage({super.key});
@@ -19,7 +20,11 @@ class _SplashPageState extends State<SplashPage> {
   void _navigateToHome() {
     Future.delayed(const Duration(seconds: 2), () {
       if (mounted) {
-        context.go('/scan');
+        if (AppSettings.isFirstRun || !AppSettings.hasAdminPassword) {
+          context.go('/setup');
+        } else {
+          context.go('/scan');
+        }
       }
     });
   }

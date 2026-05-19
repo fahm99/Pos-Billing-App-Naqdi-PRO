@@ -12,6 +12,7 @@ class Shop extends Equatable {
   final String currencyLogo;
   final String shopLogo;
   final double defaultTaxPercent;
+  final String taxNumber;
 
   const Shop({
     this.name = '',
@@ -25,6 +26,7 @@ class Shop extends Equatable {
     this.currencyLogo = '',
     this.shopLogo = '',
     this.defaultTaxPercent = 0,
+    this.taxNumber = '',
   });
 
   Shop copyWith({
@@ -39,6 +41,7 @@ class Shop extends Equatable {
     String? currencyLogo,
     String? shopLogo,
     double? defaultTaxPercent,
+    String? taxNumber,
   }) {
     return Shop(
       name: name ?? this.name,
@@ -52,6 +55,7 @@ class Shop extends Equatable {
       currencyLogo: currencyLogo ?? this.currencyLogo,
       shopLogo: shopLogo ?? this.shopLogo,
       defaultTaxPercent: defaultTaxPercent ?? this.defaultTaxPercent,
+      taxNumber: taxNumber ?? this.taxNumber,
     );
   }
 
@@ -68,5 +72,6 @@ class Shop extends Equatable {
         currencyLogo,
         shopLogo,
         defaultTaxPercent,
+        taxNumber,
       ];
 }

@@ -28,6 +28,12 @@ class Product extends Equatable {
 
   bool get isLowStock => stock <= minStock;
 
+  /// عند أو أقل من نقطة إعادة الطلب (نقطة الطلب)
+  bool get isAtOrBelowReorderPoint => stock <= minStock;
+
+  /// أقل من نقطة إعادة الطلب
+  bool get isBelowReorderPoint => stock < minStock;
+
   Product copyWith({
     String? id,
     String? name,

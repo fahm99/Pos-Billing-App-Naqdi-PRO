@@ -17,6 +17,7 @@ import '../../features/suppliers/presentation/pages/suppliers_page.dart';
 import '../../features/inventory/presentation/pages/inventory_page.dart';
 import '../../features/donation/presentation/pages/donation_page.dart';
 import '../../features/billing/presentation/pages/print_options_page.dart';
+import '../../features/setup/presentation/pages/setup_page.dart';
 
 final router = GoRouter(
   initialLocation: '/splash',
@@ -24,6 +25,10 @@ final router = GoRouter(
     GoRoute(
       path: '/splash',
       builder: (context, state) => const SplashPage(),
+    ),
+    GoRoute(
+      path: '/setup',
+      builder: (context, state) => const SetupPage(),
     ),
     // Main shell with bottom navigation
     ShellRoute(

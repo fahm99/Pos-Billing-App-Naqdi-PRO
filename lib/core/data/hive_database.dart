@@ -5,6 +5,7 @@ import '../../features/sales/data/models/invoice_model.dart';
 import '../../features/customers/data/models/customer_model.dart';
 import '../../features/suppliers/data/models/supplier_model.dart';
 import '../../features/inventory/data/models/stock_movement_model.dart';
+import '../../features/auth/data/models/user_model.dart';
 
 class HiveDatabase {
   static const String productBoxName = 'products';
@@ -14,6 +15,7 @@ class HiveDatabase {
   static const String customerBoxName = 'customers';
   static const String supplierBoxName = 'suppliers';
   static const String stockMovementBoxName = 'stock_movements';
+  static const String userBoxName = 'users';
 
   static Future<void> init() async {
     await Hive.initFlutter();
@@ -47,6 +49,9 @@ class HiveDatabase {
     if (!Hive.isAdapterRegistered(7)) {
       Hive.registerAdapter(StockMovementModelAdapter());
     }
+    if (!Hive.isAdapterRegistered(8)) {
+      Hive.registerAdapter(UserModelAdapter());
+    }
 
     // Open Boxes
     await Hive.openBox<ProductModel>(productBoxName);
@@ -55,6 +60,7 @@ class HiveDatabase {
     await Hive.openBox<CustomerModel>(customerBoxName);
     await Hive.openBox<SupplierModel>(supplierBoxName);
     await Hive.openBox<StockMovementModel>(stockMovementBoxName);
+    await Hive.openBox<UserModel>(userBoxName);
     await Hive.openBox(settingsBoxName);
   }
 
@@ -69,5 +75,6 @@ class HiveDatabase {
       Hive.box<SupplierModel>(supplierBoxName);
   static Box<StockMovementModel> get stockMovementBox =>
       Hive.box<StockMovementModel>(stockMovementBoxName);
+  static Box<UserModel> get userBox => Hive.box<UserModel>(userBoxName);
   static Box get settingsBox => Hive.box(settingsBoxName);
 }

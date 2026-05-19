@@ -42,7 +42,7 @@ class PrinterBloc extends Bloc<PrinterEvent, PrinterState> {
       bool connected = false;
       for (var device in devices) {
         final mac = device.address;
-        final name = device.name ?? '';
+        final name = device.name;
         final success = await repository.connect(mac, name);
         if (success) {
           await repository.savePrinterData(mac, name);

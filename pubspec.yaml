@@ -54,6 +54,9 @@ dependencies:
   # HTTP
   http: ^1.2.2
 
+  # Crypto
+  crypto: ^3.0.3
+
 dev_dependencies:
   flutter_test:
     sdk: flutter
