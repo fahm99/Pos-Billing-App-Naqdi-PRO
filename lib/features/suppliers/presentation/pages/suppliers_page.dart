@@ -171,8 +171,8 @@ class _SuppliersPageState extends State<SuppliersPage> {
                     ),
                     child: Text(
                       supplier.balance > 0
-                          ? 'مستحق للمورد: ₹${supplier.balance.toStringAsFixed(2)}'
-                          : 'رصيد لصالحنا: ₹${supplier.balance.abs().toStringAsFixed(2)}',
+                          ? 'مستحق للمورد: ر.س${supplier.balance.toStringAsFixed(2)}'
+                          : 'رصيد لصالحنا: ر.س${supplier.balance.abs().toStringAsFixed(2)}',
                       style: TextStyle(
                           fontSize: 11,
                           color: supplier.balance > 0
@@ -348,7 +348,7 @@ class _SupplierFormSheetState extends State<_SupplierFormSheet> {
               onSaved: (v) => _address = v ?? '',
             ),
             const SizedBox(height: 12),
-            const InputLabel(text: 'الرصيد المستحق للمورد (₹)'),
+            const InputLabel(text: 'الرصيد المستحق للمورد (ر.س)'),
             TextFormField(
               initialValue: _balance.toStringAsFixed(2),
               keyboardType:

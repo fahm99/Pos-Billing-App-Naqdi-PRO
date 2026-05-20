@@ -14,11 +14,6 @@ class _MainShellState extends State<MainShell> {
 
   final List<_NavItem> _navItems = [
     const _NavItem(
-      icon: Icons.qr_code_scanner,
-      label: 'المسح',
-      path: '/scan',
-    ),
-    const _NavItem(
       icon: Icons.inventory_2_outlined,
       label: 'المنتجات',
       path: '/products-nav',

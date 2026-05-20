@@ -172,33 +172,20 @@ class _SetupPageState extends State<SetupPage> {
       body: SafeArea(
         child: Form(
           key: _formKey,
-          child: LayoutBuilder(
-            builder: (context, constraints) {
-              return SingleChildScrollView(
-                padding: EdgeInsets.only(
-                  bottom: MediaQuery.of(context).viewInsets.bottom,
+          child: Column(
+            children: [
+              _buildHeader(),
+              // منطقة المحتوى القابلة للتمرير
+              Expanded(
+                child: SingleChildScrollView(
+                  padding: const EdgeInsets.all(24),
+                  child: _currentStep == 0
+                      ? _buildShopDataStep()
+                      : _buildAdminPasswordStep(),
                 ),
-                child: ConstrainedBox(
-                  constraints: BoxConstraints(minHeight: constraints.maxHeight),
-                  child: IntrinsicHeight(
-                    child: Column(
-                      children: [
-                        _buildHeader(),
-                        Expanded(
-                          child: SingleChildScrollView(
-                            padding: const EdgeInsets.all(24),
-                            child: _currentStep == 0
-                                ? _buildShopDataStep()
-                                : _buildAdminPasswordStep(),
-                          ),
-                        ),
-                        _buildBottomButtons(),
-                      ],
-                    ),
-                  ),
-                ),
-              );
-            },
+              ),
+              _buildBottomButtons(),
+            ],
           ),
         ),
       ),

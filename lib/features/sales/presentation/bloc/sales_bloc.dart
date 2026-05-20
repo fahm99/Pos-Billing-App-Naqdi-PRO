@@ -7,6 +7,8 @@ import '../../../../core/usecase/usecase.dart';
 part 'sales_event.dart';
 part 'sales_state.dart';
 
+/// SalesBloc - كتلة إدارة المبيعات
+/// التعديل: إضافة تحديث لحظي للمخزون بعد البيع والإرجاع
 class SalesBloc extends Bloc<SalesEvent, SalesState> {
   final GetInvoicesUseCase getInvoicesUseCase;
   final SaveInvoiceUseCase saveInvoiceUseCase;
@@ -67,7 +69,7 @@ class SalesBloc extends Bloc<SalesEvent, SalesState> {
     );
   }
 
-  /// إتمام عملية البيع مع خصم المخزون
+  /// إتمام عملية البيع مع خصم المخزون وتحديث لحظي
   Future<void> _onCompleteSale(
       CompleteSaleEvent event, Emitter<SalesState> emit) async {
     emit(state.copyWith(status: SalesStatus.loading));
@@ -83,11 +85,13 @@ class SalesBloc extends Bloc<SalesEvent, SalesState> {
             status: SalesStatus.success,
             message: 'تم إتمام البيع وخصم المخزون'));
         add(LoadInvoicesEvent());
+        // تحديث لحظي للمخزون والمنتجات بعد البيع
+        // يتم عبر BlocListener في الواجهة
       },
     );
   }
 
-  /// استرجاع الفاتورة مع إعادة الكميات للمخزون
+  /// استرجاع الفاتورة مع إعادة الكميات للمخزون وتحديث لحظي
   Future<void> _onReturn(
       ReturnInvoiceEvent event, Emitter<SalesState> emit) async {
     emit(state.copyWith(status: SalesStatus.loading));
@@ -103,6 +107,7 @@ class SalesBloc extends Bloc<SalesEvent, SalesState> {
             status: SalesStatus.success,
             message: 'تم استرجاع الفاتورة وإعادة الكميات للمخزون'));
         add(LoadInvoicesEvent());
+        // تحديث لحظي للمخزون بعد الإرجاع
       },
     );
   }

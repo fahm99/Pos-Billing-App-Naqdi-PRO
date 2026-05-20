@@ -1,11 +1,16 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
+import 'package:intl/intl.dart';
 import '../bloc/product_bloc.dart';
 import '../../domain/entities/product.dart';
 import '../../../../core/theme/app_theme.dart';
 import '../../../../core/utils/app_validators.dart';
 
+import '../../../auth/presentation/cubit/auth_cubit.dart';
+
+/// ProductListPage - قائمة المنتجات محسّنة
+/// التعديل: إضافة عرض التكلفة وتاريخ الانتهاء مع مراعاة صلاحيات الأدمن
 class ProductListPage extends StatefulWidget {
   const ProductListPage({super.key});
 
@@ -41,16 +46,13 @@ class _ProductListPageState extends State<ProductListPage> {
       if (matchedProduct != null) {
         _searchController.text = matchedProduct.name;
       } else {
-        _searchController.text =
-            barcode; // If not found, just put barcode in search
+        _searchController.text = barcode;
       }
     }
   }
 
   @override
   Widget build(BuildContext context) {
-    final borderColor = Colors.grey[100]!;
-
     return Scaffold(
       appBar: AppBar(
         backgroundColor: Colors.transparent,
@@ -83,8 +85,7 @@ class _ProductListPageState extends State<ProductListPage> {
                               color: Colors.grey[400],
                             ),
                           ),
-                          validator:
-                              AppValidators.required('الرجاء إدخال الباركود'),
+                          validator: AppValidators.required('الرجاء إدخال الباركود'),
                         ),
                       ),
                       const SizedBox(width: 12),
@@ -162,82 +163,7 @@ class _ProductListPageState extends State<ProductListPage> {
                       const SizedBox(height: 12),
                   itemBuilder: (context, index) {
                     final product = filteredProducts[index];
-                    return Container(
-                      decoration: BoxDecoration(
-                        color: Colors.white,
-                        borderRadius: BorderRadius.circular(12),
-                        border: Border.all(color: borderColor),
-                        boxShadow: const [
-                          BoxShadow(
-                              color: Colors.black12,
-                              blurRadius: 4,
-                              offset: Offset(0, 2))
-                        ],
-                      ),
-                      padding: const EdgeInsets.all(16),
-                      child: Row(
-                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                        children: [
-                          Expanded(
-                            child: Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                Text(
-                                  product.name,
-                                  style: const TextStyle(
-                                      fontWeight: FontWeight.w600,
-                                      fontSize: 16),
-                                ),
-                                const SizedBox(height: 4),
-                                Text(
-                                  '₹${product.price.toStringAsFixed(2)}',
-                                  style: TextStyle(
-                                      fontWeight: FontWeight.w500,
-                                      color: Colors.grey[600]),
-                                ),
-                              ],
-                            ),
-                          ),
-                          Row(
-                            mainAxisSize: MainAxisSize.min,
-                            children: [
-                              Container(
-                                decoration: BoxDecoration(
-                                  color: AppTheme.primaryColor.withOpacity(0.1),
-                                  borderRadius: BorderRadius.circular(8),
-                                ),
-                                child: IconButton(
-                                  icon: const Icon(Icons.edit_rounded,
-                                      color: AppTheme.primaryColor, size: 20),
-                                  constraints: const BoxConstraints(),
-                                  padding: const EdgeInsets.all(8),
-                                  onPressed: () {
-                                    context.push(
-                                        '/products-nav/edit/${product.id}',
-                                        extra: product);
-                                  },
-                                ),
-                              ),
-                              const SizedBox(width: 8),
-                              Container(
-                                decoration: BoxDecoration(
-                                  color: Colors.red.withOpacity(0.1),
-                                  borderRadius: BorderRadius.circular(8),
-                                ),
-                                child: IconButton(
-                                  icon: const Icon(Icons.delete_outline_rounded,
-                                      color: Colors.red, size: 20),
-                                  constraints: const BoxConstraints(),
-                                  padding: const EdgeInsets.all(8),
-                                  onPressed: () =>
-                                      _confirmDelete(context, product),
-                                ),
-                              ),
-                            ],
-                          )
-                        ],
-                      ),
-                    );
+                    return _buildProductCard(context, product);
                   },
                 );
               },
@@ -251,6 +177,157 @@ class _ProductListPageState extends State<ProductListPage> {
         foregroundColor: Colors.white,
         shape: const CircleBorder(),
         child: const Icon(Icons.add, size: 32),
+      ),
+    );
+  }
+
+  Widget _buildProductCard(BuildContext context, Product product) {
+    final isAdmin = context.watch<AuthCubit>().isAdminMode;
+    final daysUntilExpiry = product.daysUntilExpiry;
+    final expiryWarning = daysUntilExpiry != null && daysUntilExpiry <= 30;
+
+    return Container(
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(
+          color: expiryWarning ? Colors.red.withOpacity(0.3) : Colors.grey[100]!,
+        ),
+        boxShadow: const [
+          BoxShadow(
+              color: Colors.black12,
+              blurRadius: 4,
+              offset: Offset(0, 2))
+        ],
+      ),
+      padding: const EdgeInsets.all(16),
+      child: Row(
+        children: [
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Row(
+                  children: [
+                    if (product.isAtOrBelowReorderPoint)
+                      const Padding(
+                        padding: EdgeInsets.only(left: 6),
+                        child: Text('⚠️', style: TextStyle(fontSize: 16)),
+                      ),
+                    if (expiryWarning)
+                      const Padding(
+                        padding: EdgeInsets.only(left: 6),
+                        child: Text('📅', style: TextStyle(fontSize: 16)),
+                      ),
+                    Expanded(
+                      child: Text(
+                        product.name,
+                        style: const TextStyle(
+                            fontWeight: FontWeight.w600, fontSize: 16),
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                      ),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 4),
+                // سعر البيع
+                Text(
+                  '${product.price.toStringAsFixed(2)} ر.س',
+                  style: TextStyle(
+                      fontWeight: FontWeight.w500,
+                      color: Colors.grey[600]),
+                ),
+                if (isAdmin) ...[
+                  // التكلفة (تظهر فقط للأدمن)
+                  const SizedBox(height: 2),
+                  Text(
+                    'التكلفة: ${product.costPrice.toStringAsFixed(2)} ر.س',
+                    style: TextStyle(
+                        fontSize: 12, color: Colors.grey[400]),
+                  ),
+                ],
+                const SizedBox(height: 2),
+                // المخزون ونقطة الطلب
+                Row(
+                  children: [
+                    Text(
+                      'المخزون: ${product.stock} ${product.unit}',
+                      style: TextStyle(
+                          fontSize: 12,
+                          color: product.isAtOrBelowReorderPoint
+                              ? Colors.orange
+                              : Colors.grey[500]),
+                    ),
+                    const SizedBox(width: 8),
+                    Text(
+                      '(حد: ${product.minStock})',
+                      style: TextStyle(
+                          fontSize: 11, color: Colors.grey[400]),
+                    ),
+                  ],
+                ),
+                // تاريخ الانتهاء
+                if (daysUntilExpiry != null) ...[
+                  const SizedBox(height: 2),
+                  Row(
+                    children: [
+                      Icon(
+                        expiryWarning ? Icons.warning_amber_rounded : Icons.event,
+                        size: 14,
+                        color: expiryWarning ? Colors.red : Colors.grey[400],
+                      ),
+                      const SizedBox(width: 4),
+                      Text(
+                        'ينتهي: ${DateFormat('yyyy/MM/dd', 'ar').format(product.expiryDate!)} (${daysUntilExpiry} يوم)',
+                        style: TextStyle(
+                            fontSize: 11,
+                            color: expiryWarning ? Colors.red : Colors.grey[400]),
+                      ),
+                    ],
+                  ),
+                ],
+              ],
+            ),
+          ),
+          Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Container(
+                decoration: BoxDecoration(
+                  color: AppTheme.primaryColor.withOpacity(0.1),
+                  borderRadius: BorderRadius.circular(8),
+                ),
+                child: IconButton(
+                  icon: const Icon(Icons.edit_rounded,
+                      color: AppTheme.primaryColor, size: 20),
+                  constraints: const BoxConstraints(),
+                  padding: const EdgeInsets.all(8),
+                  onPressed: () {
+                    context.push(
+                        '/products-nav/edit/${product.id}',
+                        extra: product);
+                  },
+                ),
+              ),
+              const SizedBox(width: 8),
+              Container(
+                decoration: BoxDecoration(
+                  color: Colors.red.withOpacity(0.1),
+                  borderRadius: BorderRadius.circular(8),
+                ),
+                child: IconButton(
+                  icon: const Icon(Icons.delete_outline_rounded,
+                      color: Colors.red, size: 20),
+                  constraints: const BoxConstraints(),
+                  padding: const EdgeInsets.all(8),
+                  onPressed: () =>
+                      _confirmDelete(context, product),
+                ),
+              ),
+            ],
+          )
+        ],
       ),
     );
   }

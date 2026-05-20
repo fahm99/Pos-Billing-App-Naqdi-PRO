@@ -2,7 +2,12 @@ import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:google_fonts/google_fonts.dart';
 import '../data/app_settings.dart';
+import '../../features/auth/presentation/widgets/admin_login_dialog.dart';
 
+/// SplashPage - صفحة البداية
+/// - أول تشغيل → شاشة الإعداد
+/// - آخر وضع أدمن → شاشة الأدمن الرئيسية
+/// - آخر وضع كاشير → شاشة المسح للكاشير
 class SplashPage extends StatefulWidget {
   const SplashPage({super.key});
 
@@ -17,16 +22,36 @@ class _SplashPageState extends State<SplashPage> {
     _navigateToHome();
   }
 
-  void _navigateToHome() {
-    Future.delayed(const Duration(seconds: 2), () {
-      if (mounted) {
-        if (AppSettings.isFirstRun || !AppSettings.hasAdminPassword) {
-          context.go('/setup');
-        } else {
-          context.go('/scan');
-        }
+  Future<void> _navigateToHome() async {
+    await Future.delayed(const Duration(seconds: 2));
+    if (!mounted) return;
+
+    if (AppSettings.isFirstRun || !AppSettings.hasAdminPassword) {
+      context.go('/setup');
+      return;
+    }
+
+    // استعادة آخر وضع محفوظ
+    final lastModeWasAdmin = AppSettings.getLastMode();
+
+    if (lastModeWasAdmin) {
+      final result = await showDialog<bool>(
+        context: context,
+        barrierDismissible: false,
+        builder: (ctx) => const AdminLoginDialog(),
+      );
+
+      if (!mounted) return;
+
+      if (result == true) {
+        context.go('/admin-home');
+      } else {
+        // فشل تسجيل الدخول → كاشير
+        context.go('/scan');
       }
-    });
+    } else {
+      context.go('/scan');
+    }
   }
 
   @override
@@ -37,7 +62,6 @@ class _SplashPageState extends State<SplashPage> {
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            // Logo
             Image.asset(
               'assets/naqdilogo.jpg',
               width: 120,
@@ -45,7 +69,6 @@ class _SplashPageState extends State<SplashPage> {
               fit: BoxFit.contain,
             ),
             const SizedBox(height: 24),
-            // App Name
             Text(
               'نقدي',
               style: GoogleFonts.cairo(
@@ -56,7 +79,6 @@ class _SplashPageState extends State<SplashPage> {
               ),
             ),
             const SizedBox(height: 8),
-            // Tagline
             Text(
               'نظام نقاط البيع المتكامل',
               style: GoogleFonts.cairo(
@@ -67,7 +89,6 @@ class _SplashPageState extends State<SplashPage> {
               ),
             ),
             const SizedBox(height: 48),
-            // Loading indicator
             const CircularProgressIndicator(
               color: Color(0xFF00A77E),
             ),

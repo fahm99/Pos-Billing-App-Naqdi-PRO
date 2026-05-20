@@ -223,7 +223,7 @@ class _SalesHistoryPageState extends State<SalesHistoryPage>
               crossAxisAlignment: CrossAxisAlignment.end,
               children: [
                 Text(
-                  '₹${invoice.totalAmount.toStringAsFixed(2)}',
+                  'ر.س${invoice.totalAmount.toStringAsFixed(2)}',
                   style: TextStyle(
                       fontWeight: FontWeight.bold,
                       fontSize: 15,
@@ -333,14 +333,14 @@ class _SalesHistoryPageState extends State<SalesHistoryPage>
               Expanded(
                   child: _buildStatCard(
                       'الإيرادات',
-                      '₹${revenue.toStringAsFixed(0)}',
+                      'ر.س${revenue.toStringAsFixed(0)}',
                       Icons.attach_money,
                       AppTheme.primaryColor)),
               const SizedBox(width: 10),
               Expanded(
                   child: _buildStatCard(
                       'الأرباح',
-                      '₹${profit.toStringAsFixed(0)}',
+                      'ر.س${profit.toStringAsFixed(0)}',
                       Icons.trending_up,
                       Colors.orange)),
             ],
@@ -426,7 +426,7 @@ class _SalesHistoryPageState extends State<SalesHistoryPage>
                   Expanded(
                       child: Text(entry.key,
                           style: const TextStyle(fontSize: 13))),
-                  Text('₹${entry.value.toStringAsFixed(0)}',
+                  Text('ر.س${entry.value.toStringAsFixed(0)}',
                       style: const TextStyle(
                           fontWeight: FontWeight.bold, fontSize: 13)),
                 ],

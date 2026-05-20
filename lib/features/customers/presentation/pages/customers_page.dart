@@ -163,7 +163,7 @@ class _CustomersPageState extends State<CustomersPage> {
                       borderRadius: BorderRadius.circular(8),
                     ),
                     child: Text(
-                      'دين: ₹${customer.creditBalance.toStringAsFixed(2)}',
+                      'دين: ر.س${customer.creditBalance.toStringAsFixed(2)}',
                       style: const TextStyle(
                           fontSize: 11,
                           color: Colors.red,
@@ -343,7 +343,7 @@ class _CustomerFormSheetState extends State<_CustomerFormSheet> {
               onSaved: (v) => _address = v ?? '',
             ),
             const SizedBox(height: 12),
-            const InputLabel(text: 'الدين المستحق (₹)'),
+            const InputLabel(text: 'الدين المستحق (ر.س)'),
             TextFormField(
               initialValue: _creditBalance.toStringAsFixed(2),
               keyboardType:

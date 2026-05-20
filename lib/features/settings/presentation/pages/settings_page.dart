@@ -4,8 +4,11 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../../../core/theme/app_theme.dart';
+import '../../../../core/data/app_settings.dart';
 import '../../../shop/presentation/bloc/shop_bloc.dart';
 
+/// SettingsPage - صفحة الإعدادات
+/// التعديل: إضافة وضع الفتح الافتراضي وزر النسخ الاحتياطي
 class SettingsPage extends StatefulWidget {
   const SettingsPage({super.key});
 
@@ -14,9 +17,12 @@ class SettingsPage extends StatefulWidget {
 }
 
 class _SettingsPageState extends State<SettingsPage> {
+  bool _defaultOpenAsAdmin = false;
+
   @override
   void initState() {
     super.initState();
+    _defaultOpenAsAdmin = AppSettings.getDefaultOpenMode();
   }
 
   @override
@@ -140,6 +146,42 @@ class _SettingsPageState extends State<SettingsPage> {
 
             const SizedBox(height: 24),
 
+            // App Settings Section
+            _buildSectionHeader('إعدادات التطبيق'),
+            _buildListGroup(
+              children: [
+                _buildListItem(
+                  icon: Icons.backup_outlined,
+                  title: 'النسخ الاحتياطي',
+                  subtitle: 'إدارة النسخ الاحتياطي والاستعادة',
+                  onTap: () => context.push('/backup'),
+                ),
+                _buildDivider(),
+                // وضع الفتح الافتراضي
+                _buildListItem(
+                  icon: Icons.open_in_full_outlined,
+                  title: 'الفتح الافتراضي',
+                  subtitleWidget: SwitchListTile(
+                    title: Text(
+                      _defaultOpenAsAdmin ? 'وضع الأدمن' : 'وضع الكاشير',
+                      style: const TextStyle(fontSize: 13),
+                    ),
+                    value: _defaultOpenAsAdmin,
+                    activeColor: AppTheme.primaryColor,
+                    onChanged: (value) async {
+                      setState(() => _defaultOpenAsAdmin = value);
+                      await AppSettings.setDefaultOpenMode(value);
+                    },
+                    contentPadding: EdgeInsets.zero,
+                    dense: true,
+                  ),
+                  trailingIcon: null,
+                ),
+              ],
+            ),
+
+            const SizedBox(height: 24),
+
             // App Info
             _buildSectionHeader('عن التطبيق'),
             _buildListGroup(
@@ -147,7 +189,7 @@ class _SettingsPageState extends State<SettingsPage> {
                 _buildListItem(
                   icon: Icons.info_outline,
                   title: 'الإصدار',
-                  subtitle: '1.0.0',
+                  subtitle: '1.0.01',
                   trailingIcon: null,
                 ),
               ],

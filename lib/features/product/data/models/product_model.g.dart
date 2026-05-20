@@ -1,4 +1,5 @@
 // GENERATED CODE - DO NOT MODIFY BY HAND
+// تم التعديل يدوياً لإضافة حقل expiryDate (HiveField 9)
 
 part of 'product_model.dart';
 
@@ -26,13 +27,14 @@ class ProductModelAdapter extends TypeAdapter<ProductModel> {
       minStock: fields[6] as int,
       unit: fields[7] as String,
       category: fields[8] as String,
+      expiryDate: fields[9] as String?,
     );
   }
 
   @override
   void write(BinaryWriter writer, ProductModel obj) {
     writer
-      ..writeByte(9)
+      ..writeByte(10)
       ..writeByte(0)
       ..write(obj.id)
       ..writeByte(1)
@@ -50,7 +52,9 @@ class ProductModelAdapter extends TypeAdapter<ProductModel> {
       ..writeByte(7)
       ..write(obj.unit)
       ..writeByte(8)
-      ..write(obj.category);
+      ..write(obj.category)
+      ..writeByte(9)
+      ..write(obj.expiryDate);
   }
 
   @override

@@ -177,11 +177,11 @@ class _CheckoutPageState extends State<CheckoutPage> {
             ...state.cartItems.map((item) => TableRow(children: [
                   _dataCell('${item.quantity} × ${item.product.name}',
                       TextAlign.right),
-                  _dataCell('₹${item.product.price.toStringAsFixed(2)}',
+                  _dataCell('ر.س${item.product.price.toStringAsFixed(2)}',
                       TextAlign.right,
                       isSubtitle: true),
                   _dataCell(
-                      '₹${item.total.toStringAsFixed(2)}', TextAlign.right,
+                      'ر.س${item.total.toStringAsFixed(2)}', TextAlign.right,
                       isBold: true),
                 ])),
           ],
@@ -210,7 +210,7 @@ class _CheckoutPageState extends State<CheckoutPage> {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Text('خصم (₹)',
+                    Text('خصم (ر.س)',
                         style:
                             TextStyle(fontSize: 12, color: Colors.grey[600])),
                     const SizedBox(height: 4),
@@ -260,7 +260,7 @@ class _CheckoutPageState extends State<CheckoutPage> {
               children: [
                 Text('المجموع الفرعي',
                     style: TextStyle(fontSize: 12, color: Colors.grey[500])),
-                Text('₹${subtotal.toStringAsFixed(2)}',
+                Text('ر.س${subtotal.toStringAsFixed(2)}',
                     style: const TextStyle(fontSize: 12)),
               ],
             ),
@@ -271,7 +271,7 @@ class _CheckoutPageState extends State<CheckoutPage> {
                 children: [
                   Text('الخصم',
                       style: TextStyle(fontSize: 12, color: Colors.red[400])),
-                  Text('- ₹${_discountAmount.toStringAsFixed(2)}',
+                  Text('- ر.س${_discountAmount.toStringAsFixed(2)}',
                       style: TextStyle(
                           fontSize: 12,
                           color: Colors.red[400],
@@ -287,7 +287,7 @@ class _CheckoutPageState extends State<CheckoutPage> {
                   Text('ضريبة $_taxPercent%',
                       style: TextStyle(fontSize: 12, color: Colors.grey[500])),
                   Text(
-                      '+ ₹${((subtotal - _discountAmount) * _taxPercent / 100).toStringAsFixed(2)}',
+                      '+ ر.س${((subtotal - _discountAmount) * _taxPercent / 100).toStringAsFixed(2)}',
                       style: const TextStyle(fontSize: 12)),
                 ],
               ),
@@ -403,7 +403,7 @@ class _CheckoutPageState extends State<CheckoutPage> {
                         style: TextStyle(
                             fontWeight: FontWeight.w600, fontSize: 13)),
                     Text(
-                      '₹${(_cashPaid - total).toStringAsFixed(2)}',
+                      'ر.س${(_cashPaid - total).toStringAsFixed(2)}',
                       style: TextStyle(
                           fontWeight: FontWeight.bold,
                           fontSize: 15,
@@ -446,7 +446,7 @@ class _CheckoutPageState extends State<CheckoutPage> {
       decoration: InputDecoration(
         labelText: label,
         hintText: hint,
-        prefixText: '₹ ',
+        prefixText: 'ر.س ',
         contentPadding:
             const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
       ),
@@ -473,7 +473,7 @@ class _CheckoutPageState extends State<CheckoutPage> {
             height: 160,
             child: PrettyQrView.data(
               data:
-                  'upi://pay?pa=$upiId&pn=$shopName&am=${total.toStringAsFixed(2)}&cu=INR',
+                  'upi://pay?pa=$upiId&pn=$shopName&am=${total.toStringAsFixed(2)}&cu=SAR',
             ),
           ),
         ],
@@ -508,7 +508,7 @@ class _CheckoutPageState extends State<CheckoutPage> {
                       color: Colors.grey[400],
                       letterSpacing: 1.2)),
               Text(
-                '₹${total.toStringAsFixed(2)}',
+                'ر.س${total.toStringAsFixed(2)}',
                 style: const TextStyle(
                     fontSize: 24,
                     fontWeight: FontWeight.bold,
@@ -524,7 +524,7 @@ class _CheckoutPageState extends State<CheckoutPage> {
                 children: [
                   Text('الباقي',
                       style: TextStyle(fontSize: 12, color: Colors.grey[500])),
-                  Text('₹${change.toStringAsFixed(2)}',
+                  Text('ر.س${change.toStringAsFixed(2)}',
                       style: const TextStyle(
                           fontSize: 14,
                           fontWeight: FontWeight.bold,

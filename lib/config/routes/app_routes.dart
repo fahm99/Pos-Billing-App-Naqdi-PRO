@@ -1,13 +1,15 @@
 import 'package:go_router/go_router.dart';
 import '../../core/presentation/splash_page.dart';
 import '../../core/presentation/main_shell.dart';
-import '../../features/billing/presentation/pages/scanner_tab_page.dart';
+import '../../features/billing/presentation/pages/home_page.dart';
+import '../../features/billing/presentation/pages/admin_home_page.dart';
 import '../../features/billing/presentation/pages/scanner_page.dart';
 import '../../features/product/presentation/pages/product_list_page.dart';
 import '../../features/product/presentation/pages/add_product_page.dart';
 import '../../features/product/presentation/pages/edit_product_page.dart';
 import '../../features/shop/presentation/pages/shop_details_page.dart';
 import '../../features/settings/presentation/pages/settings_page.dart';
+import '../../features/settings/presentation/pages/backup_page.dart';
 import '../../features/billing/presentation/pages/checkout_page.dart';
 import '../../features/product/domain/entities/product.dart';
 import '../../features/sales/presentation/pages/sales_history_page.dart';
@@ -18,6 +20,7 @@ import '../../features/inventory/presentation/pages/inventory_page.dart';
 import '../../features/donation/presentation/pages/donation_page.dart';
 import '../../features/billing/presentation/pages/print_options_page.dart';
 import '../../features/setup/presentation/pages/setup_page.dart';
+import '../../features/customers/presentation/pages/customers_page.dart';
 
 final router = GoRouter(
   initialLocation: '/splash',
@@ -30,15 +33,66 @@ final router = GoRouter(
       path: '/setup',
       builder: (context, state) => const SetupPage(),
     ),
-    // Main shell with bottom navigation
+    // === Standalone routes (outside shell, no bottom nav) ===
+    // Scanner screen للكاشير (بدون شريط تنقل سفلي)
+    GoRoute(
+      path: '/scan',
+      builder: (context, state) => const HomePage(),
+    ),
+    // Admin Home screen (مع شريط تنقل سفلي خاص به)
+    GoRoute(
+      path: '/admin-home',
+      builder: (context, state) => const AdminHomePage(),
+    ),
+    // Simple Barcode Scanner (returns result only)
+    GoRoute(
+      path: '/barcode-scanner',
+      builder: (context, state) => const ScannerPage(),
+    ),
+    // Checkout (outside shell - full screen)
+    GoRoute(
+      path: '/checkout',
+      builder: (context, state) => const CheckoutPage(),
+    ),
+    // Suppliers
+    GoRoute(
+      path: '/suppliers',
+      builder: (context, state) => const SuppliersPage(),
+    ),
+    // Shop Details
+    GoRoute(
+      path: '/shop',
+      builder: (context, state) => const ShopDetailsPage(),
+    ),
+    // Products without nav (for direct access)
+    GoRoute(
+      path: '/products',
+      builder: (context, state) => const ProductListPage(),
+    ),
+    // Donation Page
+    GoRoute(
+      path: '/donation',
+      builder: (context, state) => const DonationPage(),
+    ),
+    // Print Options Page
+    GoRoute(
+      path: '/print-options',
+      builder: (context, state) => const PrintOptionsPage(),
+    ),
+    // Customers Management
+    GoRoute(
+      path: '/customers',
+      builder: (context, state) => const CustomersPage(),
+    ),
+    // Backup Management
+    GoRoute(
+      path: '/backup',
+      builder: (context, state) => const BackupPage(),
+    ),
+    // Main shell with bottom navigation (for non-scanner tabs)
     ShellRoute(
       builder: (context, state, child) => MainShell(child: child),
       routes: [
-        // Scanner Tab
-        GoRoute(
-          path: '/scan',
-          builder: (context, state) => const ScannerTabPage(),
-        ),
         // Products Tab
         GoRoute(
           path: '/products-nav',
@@ -83,41 +137,6 @@ final router = GoRouter(
           builder: (context, state) => const SettingsPage(),
         ),
       ],
-    ),
-    // Simple Barcode Scanner (returns result only)
-    GoRoute(
-      path: '/barcode-scanner',
-      builder: (context, state) => const ScannerPage(),
-    ),
-    // Checkout (outside shell - full screen)
-    GoRoute(
-      path: '/checkout',
-      builder: (context, state) => const CheckoutPage(),
-    ),
-    // Suppliers (accessible from settings)
-    GoRoute(
-      path: '/suppliers',
-      builder: (context, state) => const SuppliersPage(),
-    ),
-    // Shop Details (accessible from settings)
-    GoRoute(
-      path: '/shop',
-      builder: (context, state) => const ShopDetailsPage(),
-    ),
-    // Products without nav (for direct access from other screens)
-    GoRoute(
-      path: '/products',
-      builder: (context, state) => const ProductListPage(),
-    ),
-    // Donation Page
-    GoRoute(
-      path: '/donation',
-      builder: (context, state) => const DonationPage(),
-    ),
-    // Print Options Page
-    GoRoute(
-      path: '/print-options',
-      builder: (context, state) => const PrintOptionsPage(),
     ),
   ],
 );

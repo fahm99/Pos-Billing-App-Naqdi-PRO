@@ -3,6 +3,8 @@ import 'package:flutter/services.dart';
 import 'package:mobile_scanner/mobile_scanner.dart';
 import 'package:go_router/go_router.dart';
 
+/// ScannerPage - صفحة مسح الباركود البسيطة
+/// التعديل: إصلاح تهنيج الماسح - استخدام nullable controller مع dispose آمن
 class ScannerPage extends StatefulWidget {
   const ScannerPage({super.key});
 
@@ -11,20 +13,39 @@ class ScannerPage extends StatefulWidget {
 }
 
 class _ScannerPageState extends State<ScannerPage> {
-  final MobileScannerController _controller = MobileScannerController(
-    detectionSpeed: DetectionSpeed.noDuplicates,
-    returnImage: false,
-  );
+  MobileScannerController? _controller;
+  bool _isReady = false;
   bool _scanned = false;
 
   @override
+  void initState() {
+    super.initState();
+    _initController();
+  }
+
+  Future<void> _initController() async {
+    _controller = MobileScannerController(
+      detectionSpeed: DetectionSpeed.noDuplicates,
+      returnImage: false,
+    );
+    try {
+      await _controller!.start();
+      if (mounted) setState(() => _isReady = true);
+    } catch (_) {
+      if (mounted) setState(() => _isReady = false);
+    }
+  }
+
+  @override
   void dispose() {
-    _controller.dispose();
+    _controller?.stop();
+    _controller?.dispose();
+    _controller = null;
     super.dispose();
   }
 
   void _onDetect(BarcodeCapture capture) async {
-    if (_scanned) return;
+    if (_scanned || !_isReady) return;
     final barcode = capture.barcodes.firstWhere(
       (b) => b.rawValue != null,
       orElse: () => const Barcode(),
@@ -49,7 +70,10 @@ class _ScannerPageState extends State<ScannerPage> {
       ),
       body: Stack(
         children: [
-          MobileScanner(controller: _controller, onDetect: _onDetect),
+          if (_isReady && _controller != null)
+            MobileScanner(controller: _controller!, onDetect: _onDetect)
+          else
+            const Center(child: CircularProgressIndicator()),
           Center(
             child: Container(
               width: 250,

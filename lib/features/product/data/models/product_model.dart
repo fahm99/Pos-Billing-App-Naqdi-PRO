@@ -23,6 +23,8 @@ class ProductModel extends HiveObject {
   final String unit;
   @HiveField(8)
   final String category;
+  @HiveField(9)
+  final String? expiryDate; // تاريخ انتهاء الصلاحية كـ String ISO
 
   ProductModel({
     required this.id,
@@ -34,6 +36,7 @@ class ProductModel extends HiveObject {
     this.minStock = 5,
     this.unit = 'قطعة',
     this.category = 'عام',
+    this.expiryDate,
   });
 
   factory ProductModel.fromEntity(Product product) {
@@ -47,6 +50,7 @@ class ProductModel extends HiveObject {
       minStock: product.minStock,
       unit: product.unit,
       category: product.category,
+      expiryDate: product.expiryDate?.toIso8601String(),
     );
   }
 
@@ -61,6 +65,7 @@ class ProductModel extends HiveObject {
       minStock: minStock,
       unit: unit,
       category: category,
+      expiryDate: expiryDate != null ? DateTime.tryParse(expiryDate!) : null,
     );
   }
 }

@@ -91,12 +91,12 @@ class InvoiceDetailPage extends StatelessWidget {
                   if (invoice.cashPaid > 0) ...[
                     const Divider(height: 20),
                     _buildInfoRow('المدفوع نقداً',
-                        '₹${invoice.cashPaid.toStringAsFixed(2)}'),
+                        'ر.س${invoice.cashPaid.toStringAsFixed(2)}'),
                   ],
                   if (invoice.changeAmount > 0) ...[
                     const Divider(height: 20),
                     _buildInfoRow('الباقي للعميل',
-                        '₹${invoice.changeAmount.toStringAsFixed(2)}'),
+                        'ر.س${invoice.changeAmount.toStringAsFixed(2)}'),
                   ],
                   if (invoice.customerName != null) ...[
                     const Divider(height: 20),
@@ -140,7 +140,7 @@ class InvoiceDetailPage extends StatelessWidget {
                     ...invoice.items.map((item) => TableRow(children: [
                           _dataCell(item.productName),
                           _dataCell('${item.quantity}'),
-                          _dataCell('₹${item.subtotal.toStringAsFixed(2)}',
+                          _dataCell('ر.س${item.subtotal.toStringAsFixed(2)}',
                               bold: true),
                         ])),
                   ],
@@ -160,22 +160,22 @@ class InvoiceDetailPage extends StatelessWidget {
               child: Column(
                 children: [
                   _buildInfoRow('المجموع الفرعي',
-                      '₹${invoice.subtotal.toStringAsFixed(2)}'),
+                      'ر.س${invoice.subtotal.toStringAsFixed(2)}'),
                   if (invoice.discountAmount > 0) ...[
                     const Divider(height: 16),
                     _buildInfoRow('الخصم',
-                        '- ₹${invoice.discountAmount.toStringAsFixed(2)}',
+                        '- ر.س${invoice.discountAmount.toStringAsFixed(2)}',
                         valueColor: Colors.red),
                   ],
                   if (invoice.taxAmount > 0) ...[
                     const Divider(height: 16),
                     _buildInfoRow(
-                        'الضريبة', '₹${invoice.taxAmount.toStringAsFixed(2)}'),
+                        'الضريبة', 'ر.س${invoice.taxAmount.toStringAsFixed(2)}'),
                   ],
                   const Divider(height: 16),
                   _buildInfoRow(
                     'الإجمالي',
-                    '₹${invoice.totalAmount.toStringAsFixed(2)}',
+                    'ر.س${invoice.totalAmount.toStringAsFixed(2)}',
                     bold: true,
                     valueColor: AppTheme.primaryColor,
                   ),

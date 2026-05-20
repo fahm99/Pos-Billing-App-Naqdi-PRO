@@ -17,15 +17,15 @@ class AdminHomePage extends StatefulWidget {
 }
 
 class _AdminHomePageState extends State<AdminHomePage> {
-  int _currentNavIndex = 2; // المسح (الافتراضي)
+  int _currentNavIndex = 4; // الرئيسية (الافتراضي)
 
   // عناصر التنقل السفلي (من اليمين لليسار)
   final List<_BottomNavItem> _navItems = [
-    _BottomNavItem(icon: Icons.grid_view_rounded, label: 'المزيد', path: '/settings'),
-    _BottomNavItem(icon: Icons.trending_up_rounded, label: 'المبيعات', path: '/sales'),
-    _BottomNavItem(icon: Icons.inventory_2_rounded, label: 'المخزون', path: '/inventory'),
-    _BottomNavItem(icon: Icons.category_rounded, label: 'المنتجات', path: '/products-nav'),
-    _BottomNavItem(icon: Icons.home_rounded, label: 'الرئيسية', path: '/admin-home'),
+    const _BottomNavItem(icon: Icons.grid_view_rounded, label: 'المزيد', path: '/settings'),
+    const _BottomNavItem(icon: Icons.trending_up_rounded, label: 'المبيعات', path: '/sales'),
+    const _BottomNavItem(icon: Icons.inventory_2_rounded, label: 'المخزون', path: '/inventory'),
+    const _BottomNavItem(icon: Icons.category_rounded, label: 'المنتجات', path: '/products-nav'),
+    const _BottomNavItem(icon: Icons.home_rounded, label: 'الرئيسية', path: '/admin-home'),
   ];
 
   @override
@@ -35,7 +35,7 @@ class _AdminHomePageState extends State<AdminHomePage> {
 
     return Scaffold(
       backgroundColor: const Color(0xFFF9FAFB),
-      appBar: const CustomAppBar(showDonationButton: true),
+      appBar: const CustomAppBar(showDonationButton: true, showGreeting: true),
       body: RefreshIndicator(
         onRefresh: () async {
           if (mounted) {
@@ -450,7 +450,7 @@ class _AdminHomePageState extends State<AdminHomePage> {
                 ),
                 GestureDetector(
                   onTap: () => context.push('/sales'),
-                  child: Text(
+                  child: const Text(
                     'عرض الكل',
                     style: TextStyle(fontSize: 12, color: AppTheme.primaryColor, fontWeight: FontWeight.w600),
                   ),

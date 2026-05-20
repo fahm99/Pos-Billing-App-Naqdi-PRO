@@ -153,4 +153,38 @@ class AppSettings {
   static Future<void> resetAll() async {
     await _settingsBox.clear();
   }
+
+  // ========== Reorder Alert Tracking ==========
+  // تتبع التنبيهات المعروضة لمنع التكرار
+
+  /// الحصول على قائمة المنتجات التي تم تنبيهها
+  static Set<String> getDismissedReorderAlerts() {
+    final data = _settingsBox.get('dismissed_reorder_alerts') as String?;
+    if (data == null || data.isEmpty) return {};
+    return data.split(',').toSet();
+  }
+
+  /// إضافة منتج للقائمة التي تم تنبيهها
+  static Future<void> dismissReorderAlert(String productId) async {
+    final dismissed = getDismissedReorderAlerts();
+    dismissed.add(productId);
+    await _settingsBox.put('dismissed_reorder_alerts', dismissed.join(','));
+  }
+
+  /// إزالة منتج من القائمة (عندما يرتفع مخزونه فوق نقطة الطلب)
+  static Future<void> clearReorderAlert(String productId) async {
+    final dismissed = getDismissedReorderAlerts();
+    dismissed.remove(productId);
+    await _settingsBox.put('dismissed_reorder_alerts', dismissed.join(','));
+  }
+
+  /// التحقق مما إذا كان المنتج قد تم تنبيهه مسبقاً
+  static bool hasDismissedReorderAlert(String productId) {
+    return getDismissedReorderAlerts().contains(productId);
+  }
+
+  /// إعادة تعيين جميع تنبيهات إعادة الطلب
+  static Future<void> resetReorderAlerts() async {
+    await _settingsBox.delete('dismissed_reorder_alerts');
+  }
 }

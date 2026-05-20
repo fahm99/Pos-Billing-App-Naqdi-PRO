@@ -6,8 +6,14 @@ import 'package:go_router/go_router.dart';
 import 'package:mobile_scanner/mobile_scanner.dart';
 import '../../../../core/widgets/custom_app_bar.dart';
 import '../bloc/billing_bloc.dart';
+import '../../../product/presentation/bloc/product_bloc.dart';
+import '../../../sales/presentation/bloc/sales_bloc.dart';
 import '../../domain/entities/cart_item.dart';
 
+/// ScannerScreen - شاشة المسح بملء الشاشة
+/// التعديل: إصلاح تهنيج الماسح بعد حفظ الفاتورة
+/// - تحسين dispose و initState لمنع Memory Leak و Camera Freeze
+/// - إعادة تهيئة الماسح عند العودة من شاشة أخرى
 class ScannerScreen extends StatefulWidget {
   const ScannerScreen({super.key});
 
@@ -41,11 +47,13 @@ class _ScannerScreenState extends State<ScannerScreen>
   void didChangeAppLifecycleState(AppLifecycleState state) {
     if (state == AppLifecycleState.paused || state == AppLifecycleState.inactive) {
       _stopFullscreenScanner();
-    } else if (state == AppLifecycleState.resumed) {
+    } else if (state == AppLifecycleState.resumed && _isFullscreenScannerActive) {
       // إعادة تشغيل الماسح عند العودة للتطبيق
+      _initFullscreenController();
     }
   }
 
+  /// التخلص من وحدة التحكم بشكل آمن لمنع Camera Lock و Memory Leak
   Future<void> _disposeFullscreenController() async {
     try {
       await _fullscreenController?.stop();
@@ -55,8 +63,10 @@ class _ScannerScreenState extends State<ScannerScreen>
     _isControllerReady = false;
   }
 
+  /// تهيئة وحدة التحكم بشكل آمن
   Future<void> _initFullscreenController() async {
     await _disposeFullscreenController();
+    if (!mounted) return;
     final controller = MobileScannerController(
       detectionSpeed: DetectionSpeed.noDuplicates,
       returnImage: false,
@@ -87,7 +97,9 @@ class _ScannerScreenState extends State<ScannerScreen>
     try {
       _fullscreenController?.stop();
     } catch (_) {}
-    setState(() => _isFullscreenScannerActive = false);
+    if (mounted) {
+      setState(() => _isFullscreenScannerActive = false);
+    }
   }
 
   void _openFullscreenScanner() async {
@@ -120,26 +132,39 @@ class _ScannerScreenState extends State<ScannerScreen>
     final mediaQuery = MediaQuery.of(context);
     final bottomPadding = mediaQuery.padding.bottom;
 
-    return Scaffold(
-      backgroundColor: const Color(0xFFF8F9FF),
-      appBar: const CustomAppBar(showDonationButton: true),
-      body: BlocListener<BillingBloc, BillingState>(
-        listenWhen: (previous, current) =>
-            previous.error != current.error && current.error != null,
-        listener: (context, state) {
-          if (state.error != null) {
-            ScaffoldMessenger.of(context).showSnackBar(
-              SnackBar(
-                content: Text(state.error!),
-                backgroundColor: Colors.redAccent,
-                behavior: SnackBarBehavior.floating,
-                margin: const EdgeInsets.all(16),
-                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-              ),
-            );
-          }
-        },
-        child: Stack(
+    return MultiBlocListener(
+      listeners: [
+        BlocListener<BillingBloc, BillingState>(
+          listenWhen: (previous, current) =>
+              previous.error != current.error && current.error != null,
+          listener: (context, state) {
+            if (state.error != null) {
+              ScaffoldMessenger.of(context).showSnackBar(
+                SnackBar(
+                  content: Text(state.error!),
+                  backgroundColor: Colors.redAccent,
+                  behavior: SnackBarBehavior.floating,
+                  margin: const EdgeInsets.all(16),
+                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                ),
+              );
+            }
+          },
+        ),
+        // تحديث لحظي للمخزون بعد البيع
+        BlocListener<SalesBloc, SalesState>(
+          listenWhen: (previous, current) =>
+              current.status == SalesStatus.success &&
+              previous.status != current.status,
+          listener: (context, state) {
+            context.read<ProductBloc>().add(LoadProducts());
+          },
+        ),
+      ],
+      child: Scaffold(
+        backgroundColor: const Color(0xFFF8F9FF),
+        appBar: const CustomAppBar(showDonationButton: true),
+        body: Stack(
           children: [
             // المحتوى الرئيسي
             BlocBuilder<BillingBloc, BillingState>(
@@ -379,7 +404,7 @@ class _ScannerScreenState extends State<ScannerScreen>
               children: [
                 Text('الضريبة', style: TextStyle(fontSize: 13, color: Colors.grey[600])),
                 Text('${taxAmount.toStringAsFixed(2)} ر.س',
-                    style: TextStyle(fontWeight: FontWeight.w600, fontSize: 13)),
+                    style: const TextStyle(fontWeight: FontWeight.w600, fontSize: 13)),
               ],
             ),
           ],

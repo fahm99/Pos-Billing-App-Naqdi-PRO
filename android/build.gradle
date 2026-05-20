@@ -1,8 +1,5 @@
 allprojects {
-    repositories {
-        google()
-        mavenCentral()
-    }
+    // Repositories are defined in settings.gradle via dependencyResolutionManagement.
 }
 
 rootProject.buildDir = "../build"
