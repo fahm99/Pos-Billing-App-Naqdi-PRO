@@ -1,0 +1,15 @@
+allprojects {
+    // Repositories are defined in settings.gradle via dependencyResolutionManagement.
+}
+
+rootProject.buildDir = "../build"
+subprojects {
+    project.buildDir = "${rootProject.buildDir}/${project.name}"
+}
+subprojects {
+    project.evaluationDependsOn(":app")
+}
+
+tasks.register("clean", Delete) {
+    delete rootProject.buildDir
+}
