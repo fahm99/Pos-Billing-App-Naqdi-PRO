@@ -551,10 +551,10 @@ class _AdminHomePageState extends State<AdminHomePage>
     final isExpiringSoon = daysUntilExpiry != null && daysUntilExpiry <= 30;
 
     return Container(
-      width: 140,
+      width: 100,
       decoration: BoxDecoration(
         color: Colors.white,
-        borderRadius: BorderRadius.circular(14),
+        borderRadius: BorderRadius.circular(10),
         border: Border.all(
           color: isExpiringSoon
               ? Colors.red.withOpacity(0.3)
@@ -563,31 +563,31 @@ class _AdminHomePageState extends State<AdminHomePage>
         boxShadow: [
           BoxShadow(
               color: Colors.black.withOpacity(0.04),
-              blurRadius: 8,
-              offset: const Offset(0, 2)),
+              blurRadius: 6,
+              offset: const Offset(0, 1)),
         ],
       ),
       child: Stack(
         children: [
           Padding(
-            padding: const EdgeInsets.all(12),
+            padding: const EdgeInsets.all(8),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                const SizedBox(height: 20), // Space for badge
+                const SizedBox(height: 16),
                 // Product Image
                 Center(
                   child: Container(
-                    width: 50,
-                    height: 50,
+                    width: 36,
+                    height: 36,
                     decoration: BoxDecoration(
                       color: AppTheme.primaryColor.withOpacity(0.1),
-                      borderRadius: BorderRadius.circular(10),
+                      borderRadius: BorderRadius.circular(8),
                     ),
                     child:
                         product.imageUrl != null && product.imageUrl!.isNotEmpty
                             ? ClipRRect(
-                                borderRadius: BorderRadius.circular(10),
+                                borderRadius: BorderRadius.circular(8),
                                 child: Image.file(
                                   File(product.imageUrl!),
                                   fit: BoxFit.cover,
@@ -598,36 +598,35 @@ class _AdminHomePageState extends State<AdminHomePage>
                             : _buildDefaultImage(),
                   ),
                 ),
-                const SizedBox(height: 8),
+                const SizedBox(height: 6),
                 // Product Name
                 Text(
                   product.name,
                   style: const TextStyle(
-                      fontWeight: FontWeight.w600, fontSize: 12),
+                      fontWeight: FontWeight.w600, fontSize: 10),
                   maxLines: 1,
                   overflow: TextOverflow.ellipsis,
                 ),
-                const SizedBox(height: 4),
+                const SizedBox(height: 2),
                 // Stock
                 Text(
                   '${product.stock} ${product.unit}',
-                  style: TextStyle(fontSize: 11, color: Colors.grey[600]),
+                  style: TextStyle(fontSize: 9, color: Colors.grey[600]),
                 ),
-                const SizedBox(height: 4),
                 // Expiry
                 if (daysUntilExpiry != null)
                   Row(
                     children: [
                       Icon(
                         Icons.event,
-                        size: 12,
+                        size: 10,
                         color: isExpiringSoon ? Colors.red : Colors.grey[400],
                       ),
-                      const SizedBox(width: 4),
+                      const SizedBox(width: 2),
                       Text(
                         '$daysUntilExpiry يوم',
                         style: TextStyle(
-                            fontSize: 10,
+                            fontSize: 8,
                             color:
                                 isExpiringSoon ? Colors.red : Colors.grey[500]),
                       ),
@@ -636,26 +635,26 @@ class _AdminHomePageState extends State<AdminHomePage>
                 else
                   Text(
                     'لا يوجد',
-                    style: TextStyle(fontSize: 10, color: Colors.grey[400]),
+                    style: TextStyle(fontSize: 8, color: Colors.grey[400]),
                   ),
               ],
             ),
           ),
           // Stock Badge
           Positioned(
-            top: 8,
-            left: 8,
+            top: 4,
+            left: 4,
             child: Container(
-              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+              padding: const EdgeInsets.symmetric(horizontal: 5, vertical: 2),
               decoration: BoxDecoration(
                 color: Colors.red,
-                borderRadius: BorderRadius.circular(8),
+                borderRadius: BorderRadius.circular(6),
               ),
               child: Text(
                 '${product.stock}',
                 style: const TextStyle(
                     color: Colors.white,
-                    fontSize: 11,
+                    fontSize: 9,
                     fontWeight: FontWeight.bold),
               ),
             ),

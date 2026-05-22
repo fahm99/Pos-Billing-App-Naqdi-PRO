@@ -1,5 +1,4 @@
 // GENERATED CODE - DO NOT MODIFY BY HAND
-// تم التعديل يدوياً لإضافة حقول expiryDate (HiveField 9) و imageUrl (HiveField 10)
 
 part of 'product_model.dart';
 

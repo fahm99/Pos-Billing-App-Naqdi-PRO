@@ -173,28 +173,18 @@ class _SettingsPageState extends State<SettingsPage> {
         title: 'إدارة الديون',
         subtitle: 'إدارة ديون العملاء',
         onTap: () {
-          ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(
-              content: Text('سيتم إضافة الميزة قريباً'),
-              backgroundColor: Colors.orange,
-            ),
-          );
+          NotificationHelper.show(context, 'سيتم إضافة الميزة قريباً');
         },
-        isComingSoon: false,
+        isComingSoon: true,
       ),
       _ManagementItem(
         icon: Icons.receipt_long_outlined,
         title: 'إدارة المصروفات',
         subtitle: 'تسجيل المصروفات',
         onTap: () {
-          ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(
-              content: Text('سيتم إضافة الميزة قريباً'),
-              backgroundColor: Colors.orange,
-            ),
-          );
+          NotificationHelper.show(context, 'سيتم إضافة الميزة قريباً');
         },
-        isComingSoon: false,
+        isComingSoon: true,
       ),
       _ManagementItem(
         icon: Icons.volunteer_activism_outlined,
