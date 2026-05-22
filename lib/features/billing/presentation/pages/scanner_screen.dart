@@ -35,6 +35,7 @@ class _ScannerScreenState extends State<ScannerScreen>
   @override
   void initState() {
     super.initState();
+    _navigatingToCheckout = false;
     WidgetsBinding.instance.addObserver(this);
     _loadCurrencySymbol();
     WidgetsBinding.instance.addPostFrameCallback((_) => _initScannerController());
@@ -139,8 +140,7 @@ class _ScannerScreenState extends State<ScannerScreen>
       listeners: [
         BlocListener<BillingBloc, BillingState>(
           listenWhen: (previous, current) =>
-              previous.cartItems.length < current.cartItems.length &&
-              current.cartItems.length == 1,
+              previous.cartItems.length < current.cartItems.length,
           listener: (context, state) {
             if (mounted) _goToCheckout();
           },

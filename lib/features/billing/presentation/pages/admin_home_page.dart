@@ -34,6 +34,7 @@ class _AdminHomePageState extends State<AdminHomePage>
   @override
   void initState() {
     super.initState();
+    _navigatingToCheckout = false;
     WidgetsBinding.instance.addObserver(this);
     _loadCurrencySymbol();
     WidgetsBinding.instance.addPostFrameCallback((_) => _initScannerController());

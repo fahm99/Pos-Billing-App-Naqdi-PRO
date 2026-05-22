@@ -74,6 +74,7 @@ class _CheckoutPageState extends State<CheckoutPage> {
       canPop: false,
       onPopInvoked: (bool didPop) {
         if (didPop) return;
+        context.read<BillingBloc>().add(ClearCartEvent());
         _goHomeBasedOnMode();
       },
       child: Scaffold(
@@ -85,6 +86,7 @@ class _CheckoutPageState extends State<CheckoutPage> {
           leading: IconButton(
             icon: Icon(Icons.chevron_left, size: 28, color: Theme.of(context).primaryColor),
             onPressed: () {
+              context.read<BillingBloc>().add(ClearCartEvent());
               _goHomeBasedOnMode();
             },
           ),
