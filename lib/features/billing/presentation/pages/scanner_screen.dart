@@ -605,7 +605,7 @@ class _ScannerScreenState extends State<ScannerScreen>
                     ? 'السلة فارغة'
                     : 'مراجعة الطلب (${state.cartItems.length})',
                 style:
-                    const TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+                    const TextStyle(fontSize: 14, fontWeight: FontWeight.bold),
               ),
             ],
           ),

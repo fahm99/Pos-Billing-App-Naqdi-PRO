@@ -122,6 +122,16 @@ class _AdminHomePageState extends State<AdminHomePage>
     }
   }
 
+  void _goToAdminBilling() {
+    if (_navigatingToCheckout) return;
+    _navigatingToCheckout = true;
+    _stopScanner();
+    context.push('/admin-billing').then((_) {
+      _navigatingToCheckout = false;
+      if (mounted && !_isDisposed && _isCameraOn) _startScanner();
+    });
+  }
+
   void _goToCheckout() {
     if (_navigatingToCheckout) return;
     _navigatingToCheckout = true;
@@ -141,7 +151,7 @@ class _AdminHomePageState extends State<AdminHomePage>
               previous.cartItems.length < current.cartItems.length &&
               current.cartItems.length == 1,
           listener: (context, state) {
-            if (mounted) _goToCheckout();
+            if (mounted) _goToAdminBilling();
           },
         ),
         BlocListener<BillingBloc, BillingState>(

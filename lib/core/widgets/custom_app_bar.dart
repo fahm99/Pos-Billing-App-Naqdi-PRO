@@ -4,6 +4,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
 import '../../features/auth/presentation/cubit/auth_cubit.dart';
 import '../../features/auth/presentation/widgets/admin_login_dialog.dart';
+import '../../features/billing/presentation/bloc/billing_bloc.dart';
 import '../../features/shop/presentation/bloc/shop_bloc.dart';
 import '../theme/app_theme.dart';
 
@@ -223,6 +224,7 @@ class CustomAppBar extends StatelessWidget implements PreferredSizeWidget {
       builder: (_) => const AdminLoginDialog(),
     );
     if (result == true && context.mounted) {
+      context.read<BillingBloc>().add(ClearCartEvent());
       context.go('/admin-home');
     }
   }
@@ -249,6 +251,7 @@ class CustomAppBar extends StatelessWidget implements PreferredSizeWidget {
       ),
     );
     if (result == true && context.mounted) {
+      context.read<BillingBloc>().add(ClearCartEvent());
       context.go('/scan');
     }
   }

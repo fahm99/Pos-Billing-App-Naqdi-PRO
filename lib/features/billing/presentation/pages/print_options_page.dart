@@ -14,6 +14,7 @@ import 'package:uuid/uuid.dart';
 
 import '../../../../core/theme/app_theme.dart';
 import '../../../../core/utils/notification_helper.dart';
+import '../../../../features/auth/presentation/cubit/auth_cubit.dart';
 import '../../../shop/presentation/bloc/shop_bloc.dart';
 import '../../../shop/domain/entities/shop.dart';
 import '../../../sales/domain/entities/invoice.dart';
@@ -49,6 +50,15 @@ class _PrintOptionsPageState extends State<PrintOptionsPage> {
     }
   }
 
+  void _goHomeBasedOnMode() {
+    final authState = context.read<AuthCubit>().state;
+    if (authState is AdminMode) {
+      context.go('/admin-home');
+    } else {
+      context.go('/scan');
+    }
+  }
+
   double _calcTotal(double subtotal) {
     final afterDiscount = subtotal - _discountAmount;
     final tax = afterDiscount * (_taxPercent / 100);
@@ -81,7 +91,7 @@ class _PrintOptionsPageState extends State<PrintOptionsPage> {
           if (state.printSuccess) {
             _saveInvoice(context, state);
             NotificationHelper.show(context, 'تم حفظ الفاتورة بنجاح');
-            context.go('/scan');
+            _goHomeBasedOnMode();
           }
           if (state.error != null) {
             NotificationHelper.show(context, state.error!);
@@ -433,7 +443,7 @@ class _PrintOptionsPageState extends State<PrintOptionsPage> {
           _saveInvoice(context, billingState);
           NotificationHelper.show(context, 'تم تسجيل البيع بنجاح');
           context.read<BillingBloc>().add(ClearCartEvent());
-          context.go('/scan');
+          _goHomeBasedOnMode();
         },
         style: ElevatedButton.styleFrom(
           backgroundColor: Colors.grey[800],
@@ -713,7 +723,7 @@ class _PrintOptionsPageState extends State<PrintOptionsPage> {
           Share.shareXFiles([XFile(file.path)], text: 'فاتورة رقم $invoiceNumber');
         }
         context.read<BillingBloc>().add(ClearCartEvent());
-        context.go('/scan');
+        _goHomeBasedOnMode();
       }
     } catch (e) {
       if (mounted) {
@@ -755,7 +765,7 @@ class _PrintOptionsPageState extends State<PrintOptionsPage> {
       if (mounted) {
         _saveInvoice(context, billingState);
         context.read<BillingBloc>().add(ClearCartEvent());
-        context.go('/scan');
+        _goHomeBasedOnMode();
       }
     } catch (e) {
       if (mounted) {
@@ -775,7 +785,7 @@ class _PrintOptionsPageState extends State<PrintOptionsPage> {
       _saveInvoice(context, billingState);
       NotificationHelper.show(context, 'تم تسجيل البيع بنجاح');
       context.read<BillingBloc>().add(ClearCartEvent());
-      context.go('/scan');
+      _goHomeBasedOnMode();
     } catch (e) {
       if (mounted) {
         NotificationHelper.show(context, 'فشل: $e');

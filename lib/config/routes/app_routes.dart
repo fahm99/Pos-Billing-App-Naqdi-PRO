@@ -21,6 +21,7 @@ import '../../features/inventory/presentation/pages/inventory_page.dart';
 import '../../features/inventory/presentation/pages/stock_alerts_page.dart';
 import '../../features/donation/presentation/pages/donation_page.dart';
 import '../../features/billing/presentation/pages/print_options_page.dart';
+import '../../features/billing/presentation/pages/admin_billing_page.dart';
 import '../../features/setup/presentation/pages/setup_page.dart';
 import '../../features/customers/presentation/pages/customers_page.dart';
 
@@ -49,6 +50,11 @@ final router = GoRouter(
     GoRoute(
       path: '/checkout',
       builder: (context, state) => const CheckoutPage(),
+    ),
+    // Admin Billing (after scan in admin mode)
+    GoRoute(
+      path: '/admin-billing',
+      builder: (context, state) => const AdminBillingPage(),
     ),
     // Stock Alerts
     GoRoute(

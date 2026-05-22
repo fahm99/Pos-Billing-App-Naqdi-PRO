@@ -7,6 +7,7 @@ import 'package:uuid/uuid.dart';
 
 import '../../../../core/theme/app_theme.dart';
 import '../../../../core/utils/notification_helper.dart';
+import '../../../../features/auth/presentation/cubit/auth_cubit.dart';
 import '../../../shop/presentation/bloc/shop_bloc.dart';
 import '../../../sales/domain/entities/invoice.dart';
 import '../../../sales/presentation/bloc/sales_bloc.dart';
@@ -42,6 +43,15 @@ class _CheckoutPageState extends State<CheckoutPage> {
     }
   }
 
+  void _goHomeBasedOnMode() {
+    final authState = context.read<AuthCubit>().state;
+    if (authState is AdminMode) {
+      context.go('/admin-home');
+    } else {
+      _goHomeBasedOnMode();
+    }
+  }
+
   double _calcTotal(double subtotal) {
     final afterDiscount = subtotal - _discountAmount;
     final tax = afterDiscount * (_taxPercent / 100);
@@ -64,7 +74,7 @@ class _CheckoutPageState extends State<CheckoutPage> {
       canPop: false,
       onPopInvoked: (bool didPop) {
         if (didPop) return;
-        context.go('/scan');
+        _goHomeBasedOnMode();
       },
       child: Scaffold(
         appBar: AppBar(
@@ -75,7 +85,7 @@ class _CheckoutPageState extends State<CheckoutPage> {
           leading: IconButton(
             icon: Icon(Icons.chevron_left, size: 28, color: Theme.of(context).primaryColor),
             onPressed: () {
-              context.go('/scan');
+              _goHomeBasedOnMode();
             },
           ),
         ),
@@ -84,6 +94,8 @@ class _CheckoutPageState extends State<CheckoutPage> {
             if (state.printSuccess) {
               _saveInvoice(context, state);
               NotificationHelper.show(context, 'تمت الطباعة وحفظ الفاتورة');
+              context.read<BillingBloc>().add(ClearCartEvent());
+              _goHomeBasedOnMode();
             }
             if (state.error != null) {
               NotificationHelper.show(context, state.error!);

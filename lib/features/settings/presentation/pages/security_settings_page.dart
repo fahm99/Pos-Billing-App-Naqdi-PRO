@@ -159,7 +159,7 @@ class _SecuritySettingsPageState extends State<SecuritySettingsPage> {
                   ),
                   child: _isSaving
                       ? const SizedBox(width: 20, height: 20, child: CircularProgressIndicator(color: Colors.white, strokeWidth: 2))
-                      : const Text('حفظ التغييرات', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 15)),
+                      : const Text('حفظ التغييرات', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 13)),
                 ),
               ),
             ],
