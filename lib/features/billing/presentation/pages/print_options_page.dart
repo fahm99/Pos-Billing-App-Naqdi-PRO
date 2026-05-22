@@ -91,6 +91,7 @@ class _PrintOptionsPageState extends State<PrintOptionsPage> {
           if (state.printSuccess) {
             _saveInvoice(context, state);
             NotificationHelper.show(context, 'تم حفظ الفاتورة بنجاح');
+            context.read<BillingBloc>().add(ClearCartEvent());
             _goHomeBasedOnMode();
           }
           if (state.error != null) {

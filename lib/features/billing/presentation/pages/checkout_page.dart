@@ -48,7 +48,7 @@ class _CheckoutPageState extends State<CheckoutPage> {
     if (authState is AdminMode) {
       context.go('/admin-home');
     } else {
-      _goHomeBasedOnMode();
+      context.go('/scan');
     }
   }
 
