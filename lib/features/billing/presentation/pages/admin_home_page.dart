@@ -5,6 +5,7 @@ import 'package:flutter/services.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
 import 'package:mobile_scanner/mobile_scanner.dart';
+import '../../../../core/services/scanner_service.dart';
 import '../../../../core/theme/app_theme.dart';
 import '../../../../core/utils/notification_helper.dart';
 import '../../../product/presentation/bloc/product_bloc.dart';
@@ -57,9 +58,7 @@ class _AdminHomePageState extends State<AdminHomePage>
     _isDisposed = true;
     _barcodeSubscription?.cancel();
     _barcodeSubscription = null;
-    _scannerController?.stop();
-    _scannerController?.dispose();
-    _scannerController = null;
+    ScannerService().release('AdminHomePage');
     super.dispose();
   }
 
@@ -68,10 +67,10 @@ class _AdminHomePageState extends State<AdminHomePage>
     if (_isDisposed) return;
     switch (state) {
       case AppLifecycleState.resumed:
-        if (_isCameraOn && _scannerController != null) {
+        if (_isCameraOn) {
           _barcodeSubscription?.cancel();
           _barcodeSubscription = _scannerController?.barcodes.listen(_onDetect);
-          try { _scannerController?.start(); } catch (_) {}
+          ScannerService().start();
         }
       case AppLifecycleState.inactive:
       case AppLifecycleState.paused:
@@ -79,19 +78,27 @@ class _AdminHomePageState extends State<AdminHomePage>
       case AppLifecycleState.detached:
         _barcodeSubscription?.cancel();
         _barcodeSubscription = null;
-        try { _scannerController?.stop(); } catch (_) {}
+        ScannerService().stop();
     }
   }
 
   void _initScanner() {
     if (_isDisposed) return;
-    _scannerController = MobileScannerController(
-      detectionSpeed: DetectionSpeed.noDuplicates,
-      returnImage: false,
-    );
+    final wasReused = ScannerService().isReused;
+    _scannerController = ScannerService().controller('AdminHomePage');
     _barcodeSubscription = _scannerController!.barcodes.listen(_onDetect);
-    try { _scannerController!.start(); } catch (_) {}
+    ScannerService().start();
     if (mounted && !_isDisposed) setState(() {});
+    // عند العودة من شاشة أخرى، قد تظهر الكاميرا سوداء
+    // نقوم بإعادة تشغيلها بعد اكتمال الانتقال
+    if (wasReused) {
+      Future.delayed(const Duration(milliseconds: 500), () {
+        if (mounted && !_isDisposed && _isCameraOn) {
+          _stopScanner();
+          _startScanner();
+        }
+      });
+    }
   }
 
   void _startScanner() {
@@ -102,14 +109,14 @@ class _AdminHomePageState extends State<AdminHomePage>
     }
     _barcodeSubscription?.cancel();
     _barcodeSubscription = _scannerController!.barcodes.listen(_onDetect);
-    try { _scannerController!.start(); } catch (_) {}
+    ScannerService().start();
     if (mounted && !_isDisposed) setState(() {});
   }
 
   void _stopScanner() {
     _barcodeSubscription?.cancel();
     _barcodeSubscription = null;
-    try { _scannerController?.stop(); } catch (_) {}
+    ScannerService().stop();
   }
 
   void _onDetect(Object? event) {
