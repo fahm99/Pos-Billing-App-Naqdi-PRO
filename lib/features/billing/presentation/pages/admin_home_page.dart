@@ -40,8 +40,18 @@ class _AdminHomePageState extends State<AdminHomePage>
     _navigatingToCheckout = false;
     WidgetsBinding.instance.addObserver(this);
     _loadCurrencySymbol();
+    if (ScannerService.saleJustCompleted) {
+      ScannerService.saleJustCompleted = false;
+      _isCameraOn = false;
+    }
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      if (!_isDisposed && mounted) _initScanner();
+      if (!_isDisposed && mounted) {
+        if (_isCameraOn) {
+          _initScanner();
+        } else {
+          setState(() {});
+        }
+      }
     });
   }
 
@@ -84,21 +94,10 @@ class _AdminHomePageState extends State<AdminHomePage>
 
   void _initScanner() {
     if (_isDisposed) return;
-    final wasReused = ScannerService().isReused;
     _scannerController = ScannerService().controller('AdminHomePage');
     _barcodeSubscription = _scannerController!.barcodes.listen(_onDetect);
     ScannerService().start();
     if (mounted && !_isDisposed) setState(() {});
-    // عند العودة من شاشة أخرى، قد تظهر الكاميرا سوداء
-    // نقوم بإعادة تشغيلها بعد اكتمال الانتقال
-    if (wasReused) {
-      Future.delayed(const Duration(milliseconds: 500), () {
-        if (mounted && !_isDisposed && _isCameraOn) {
-          _stopScanner();
-          _startScanner();
-        }
-      });
-    }
   }
 
   void _startScanner() {

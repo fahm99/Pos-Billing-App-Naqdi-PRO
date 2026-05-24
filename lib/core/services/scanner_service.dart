@@ -6,24 +6,21 @@ class ScannerService {
   factory ScannerService() => _instance;
   ScannerService._();
 
+  /// يتم تعيينه عند إتمام عملية بيع للعودة للكاميرا بحالة إيقاف
+  static bool saleJustCompleted = false;
+
   MobileScannerController? _controller;
   int _referenceCount = 0;
-  bool _wasDisposed = false;
 
   MobileScannerController controller(String widgetKey) {
     _referenceCount++;
-    if (_controller == null) {
-      _wasDisposed = false;
-      _controller = MobileScannerController(
-        detectionSpeed: DetectionSpeed.noDuplicates,
-        returnImage: false,
-        autoStart: false,
-      );
-    }
+    _controller ??= MobileScannerController(
+      detectionSpeed: DetectionSpeed.noDuplicates,
+      returnImage: false,
+      autoStart: false,
+    );
     return _controller!;
   }
-
-  bool get isReused => _wasDisposed;
 
   Future<void> start() async {
     try {
@@ -41,14 +38,12 @@ class ScannerService {
     _referenceCount--;
     if (_referenceCount <= 0) {
       _referenceCount = 0;
-      _wasDisposed = true;
-      stop();
+      dispose();
     }
   }
 
   void dispose() {
     _referenceCount = 0;
-    _wasDisposed = true;
     try {
       _controller?.stop();
       _controller?.dispose();

@@ -5,6 +5,7 @@ import 'package:go_router/go_router.dart';
 import 'package:pretty_qr_code/pretty_qr_code.dart';
 import 'package:uuid/uuid.dart';
 
+import '../../../../core/services/scanner_service.dart';
 import '../../../../core/theme/app_theme.dart';
 import '../../../../core/utils/notification_helper.dart';
 import '../../../../features/auth/presentation/cubit/auth_cubit.dart';
@@ -97,6 +98,7 @@ class _CheckoutPageState extends State<CheckoutPage> {
               _saveInvoice(context, state);
               NotificationHelper.show(context, 'تمت الطباعة وحفظ الفاتورة');
               context.read<BillingBloc>().add(ClearCartEvent());
+              ScannerService.saleJustCompleted = true;
               _goHomeBasedOnMode();
             }
             if (state.error != null) {
