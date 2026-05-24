@@ -66,6 +66,7 @@ Future<void> init() async {
         deleteInvoiceUseCase: sl(),
         completeSaleUseCase: sl(),
         returnInvoiceUseCase: sl(),
+        getProductsUseCase: sl(),
       ));
   sl.registerLazySingleton(() => GetInvoicesUseCase(sl()));
   sl.registerLazySingleton(() => GetInvoiceByIdUseCase(sl()));

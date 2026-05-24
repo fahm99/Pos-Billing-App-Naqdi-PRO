@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:url_launcher/url_launcher.dart';
+import '../../../../core/theme/app_theme.dart';
 
 class DonationPage extends StatelessWidget {
   const DonationPage({super.key});
@@ -29,21 +31,21 @@ class DonationPage extends StatelessWidget {
               decoration: BoxDecoration(
                 gradient: LinearGradient(
                   colors: [
-                    const Color(0xFF00A77E).withOpacity(0.1),
-                    const Color(0xFF00A77E).withOpacity(0.05),
+                    AppTheme.primaryColor.withOpacity(0.1),
+                    AppTheme.primaryColor.withOpacity(0.05),
                   ],
                   begin: Alignment.topCenter,
                   end: Alignment.bottomCenter,
                 ),
                 borderRadius: BorderRadius.circular(16),
                 border: Border.all(
-                  color: const Color(0xFF00A77E).withOpacity(0.2),
+                  color: AppTheme.primaryColor.withOpacity(0.2),
                 ),
               ),
               child: Column(
                 children: [
                   const Icon(Icons.volunteer_activism,
-                      size: 48, color: Color(0xFF00A77E)),
+                      size: 48, color: AppTheme.primaryColor),
                   const SizedBox(height: 12),
                   const Text(
                     'ساهم في تطوير التطبيق',
@@ -90,7 +92,92 @@ class DonationPage extends StatelessWidget {
                 {'type': 'ريال سعودي', 'number': '3143725412'},
               ],
             ),
+
+            // Bank: بنك الراجحي
+            _buildBankCard(
+              bankName: 'بنك الراجحي',
+              bankLogo: '🏦',
+              accounts: [
+                {'type': 'رقم الحساب', 'number': '141000010006086039638'},
+                {'type': 'رقم الآيبان', 'number': 'SA30 8000 0141 6080 1603 9638'},
+              ],
+            ),
+
+            const SizedBox(height: 32),
+
+            // Contact Section
+            Container(
+              width: double.infinity,
+              padding: const EdgeInsets.all(20),
+              decoration: BoxDecoration(
+                color: Colors.white,
+                borderRadius: BorderRadius.circular(16),
+                border: Border.all(color: Colors.grey[200]!),
+              ),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  const Row(
+                    children: [
+                      Icon(Icons.headset_mic, size: 20, color: Color(0xFF1A1A1A)),
+                      SizedBox(width: 8),
+                      Text(
+                        'تواصل مع المطور',
+                        style: TextStyle(
+                          fontSize: 16,
+                          fontWeight: FontWeight.bold,
+                          color: Color(0xFF1A1A1A),
+                        ),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 16),
+                  _buildWhatsAppButton(
+                    number: '+967738694238',
+                    label: '+967 738 694 238',
+                  ),
+                  const SizedBox(height: 8),
+                  _buildWhatsAppButton(
+                    number: '+9660576701295',
+                    label: '+966 057 670 1295',
+                  ),
+                ],
+              ),
+            ),
+
+            const SizedBox(height: 32),
           ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildWhatsAppButton({required String number, required String label}) {
+    return SizedBox(
+      width: double.infinity,
+      child: OutlinedButton.icon(
+        onPressed: () {
+          final url = 'https://wa.me/$number';
+          launchUrl(Uri.parse(url), mode: LaunchMode.externalApplication);
+        },
+        icon: const Icon(
+          Icons.chat,
+          color: Color(0xFF25D366),
+          size: 20,
+        ),
+        label: Text(
+          label,
+          style: const TextStyle(
+            fontSize: 14,
+            color: Color(0xFF1A1A1A),
+          ),
+        ),
+        style: OutlinedButton.styleFrom(
+          padding: const EdgeInsets.symmetric(vertical: 12),
+          side: BorderSide(color: Colors.grey[300]!),
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(12),
+          ),
         ),
       ),
     );
@@ -107,13 +194,6 @@ class DonationPage extends StatelessWidget {
         color: Colors.white,
         borderRadius: BorderRadius.circular(16),
         border: Border.all(color: Colors.grey[200]!),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withOpacity(0.03),
-            blurRadius: 8,
-            offset: const Offset(0, 2),
-          ),
-        ],
       ),
       child: Column(
         children: [
@@ -121,7 +201,7 @@ class DonationPage extends StatelessWidget {
           Container(
             padding: const EdgeInsets.all(16),
             decoration: BoxDecoration(
-              color: const Color(0xFF00A77E).withOpacity(0.05),
+              color: AppTheme.primaryColor.withOpacity(0.05),
               borderRadius:
                   const BorderRadius.vertical(top: Radius.circular(16)),
             ),
@@ -178,7 +258,7 @@ class DonationPage extends StatelessWidget {
                     ),
                     IconButton(
                       icon: const Icon(Icons.copy_rounded, size: 20),
-                      color: const Color(0xFF00A77E),
+                      color: AppTheme.primaryColor,
                       onPressed: () {
                         Clipboard.setData(
                             ClipboardData(text: account['number']!));

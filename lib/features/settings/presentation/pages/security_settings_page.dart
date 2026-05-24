@@ -149,7 +149,7 @@ class _SecuritySettingsPageState extends State<SecuritySettingsPage> {
               const SizedBox(height: 32),
 
               SizedBox(
-                height: 50,
+                height: 52,
                 child: ElevatedButton(
                   onPressed: _isSaving ? null : _save,
                   style: ElevatedButton.styleFrom(
@@ -159,7 +159,7 @@ class _SecuritySettingsPageState extends State<SecuritySettingsPage> {
                   ),
                   child: _isSaving
                       ? const SizedBox(width: 20, height: 20, child: CircularProgressIndicator(color: Colors.white, strokeWidth: 2))
-                      : const Text('حفظ التغييرات', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 13)),
+                      : const Text('حفظ التغييرات', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 12)),
                 ),
               ),
             ],

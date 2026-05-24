@@ -204,7 +204,7 @@ class _StockAlertsPageState extends State<StockAlertsPage> {
         width: 28,
         height: 28,
         fit: BoxFit.contain,
-        errorBuilder: (_, __, ___) => Icon(
+        errorBuilder: (_, __, ___) => const Icon(
           Icons.inventory_2_outlined,
           color: AppTheme.primaryColor,
           size: 22,

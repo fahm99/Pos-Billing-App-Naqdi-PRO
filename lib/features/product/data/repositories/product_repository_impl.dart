@@ -83,6 +83,8 @@ class ProductRepositoryImpl implements ProductRepository {
         minStock: model.minStock,
         unit: model.unit,
         category: model.category,
+        expiryDate: model.expiryDate,
+        imageUrl: model.imageUrl,
       );
       await box.put(productId, updated);
       return const Right(null);

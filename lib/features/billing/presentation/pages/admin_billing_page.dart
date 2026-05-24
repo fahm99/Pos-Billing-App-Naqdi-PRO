@@ -134,7 +134,7 @@ class AdminBillingPage extends StatelessWidget {
         width: 56,
         height: 56,
         fit: BoxFit.contain,
-        errorBuilder: (_, __, ___) => Icon(
+        errorBuilder: (_, __, ___) => const Icon(
           Icons.inventory_2_outlined,
           color: AppTheme.primaryColor,
           size: 48,
@@ -263,17 +263,17 @@ class AdminBillingPage extends StatelessWidget {
       children: [
         SizedBox(
           width: double.infinity,
-          height: 52,
+          height: 48,
           child: ElevatedButton.icon(
             onPressed: () => context.push('/checkout'),
-            icon: const Icon(Icons.receipt_long_rounded),
-            label: const Text('مراجعة الطلب',
-                style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
+            icon: const Icon(Icons.receipt_long_rounded, size: 16),
+            label: const Text('متابعة الطلب',
+                style: TextStyle(fontSize: 13, fontWeight: FontWeight.bold)),
             style: ElevatedButton.styleFrom(
               backgroundColor: AppTheme.primaryColor,
               foregroundColor: Colors.white,
               shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(14)),
+                  borderRadius: BorderRadius.circular(12)),
               elevation: 2,
             ),
           ),
@@ -281,17 +281,17 @@ class AdminBillingPage extends StatelessWidget {
         const SizedBox(height: 12),
         SizedBox(
           width: double.infinity,
-          height: 48,
+          height: 40,
           child: OutlinedButton.icon(
             onPressed: () => context.go('/admin-home'),
-            icon: const Icon(Icons.qr_code_scanner_rounded),
+            icon: const Icon(Icons.qr_code_scanner_rounded, size: 16),
             label: const Text('مسح منتج آخر',
-                style: TextStyle(fontSize: 14, fontWeight: FontWeight.w600)),
+                style: TextStyle(fontSize: 13, fontWeight: FontWeight.w600)),
             style: OutlinedButton.styleFrom(
               foregroundColor: AppTheme.primaryColor,
               side: BorderSide(color: AppTheme.primaryColor.withOpacity(0.3)),
               shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(14)),
+                  borderRadius: BorderRadius.circular(10)),
             ),
           ),
         ),

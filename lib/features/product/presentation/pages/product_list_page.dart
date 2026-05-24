@@ -356,7 +356,7 @@ class _ProductListPageState extends State<ProductListPage> {
         width: 36,
         height: 36,
         fit: BoxFit.contain,
-        errorBuilder: (_, __, ___) => Icon(
+        errorBuilder: (_, __, ___) => const Icon(
           Icons.inventory_2_outlined,
           color: AppTheme.primaryColor,
           size: 28,

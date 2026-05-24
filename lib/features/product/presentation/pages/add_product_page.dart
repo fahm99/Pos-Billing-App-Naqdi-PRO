@@ -431,8 +431,9 @@ class _AddProductPageState extends State<AddProductPage> {
                             const InputLabel(text: 'الوحدة'),
                             Autocomplete<String>(
                               optionsBuilder: (textEditingValue) {
-                                if (textEditingValue.text.isEmpty)
+                                if (textEditingValue.text.isEmpty) {
                                   return _unitOptions;
+                                }
                                 return _unitOptions.where((opt) =>
                                     opt.contains(textEditingValue.text));
                               },
@@ -461,8 +462,9 @@ class _AddProductPageState extends State<AddProductPage> {
                             const InputLabel(text: 'التصنيف'),
                             Autocomplete<String>(
                               optionsBuilder: (textEditingValue) {
-                                if (textEditingValue.text.isEmpty)
+                                if (textEditingValue.text.isEmpty) {
                                   return _categoryOptions;
+                                }
                                 return _categoryOptions.where((opt) =>
                                     opt.contains(textEditingValue.text));
                               },

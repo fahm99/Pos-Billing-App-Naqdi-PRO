@@ -28,13 +28,13 @@ class _MainShellState extends State<MainShell> {
   ];
 
   void _onTap(int index) {
+    if (_currentIndex == index) return;
     setState(() => _currentIndex = index);
     context.go(_navItems[index].path);
   }
 
   @override
   Widget build(BuildContext context) {
-    // Show AppBar only on admin home and cashier scanner screens (not on sub-routes)
     final currentPath = GoRouterState.of(context).matchedLocation;
     final showAppBar = currentPath == '/admin-home' || currentPath == '/scan';
 
@@ -42,37 +42,35 @@ class _MainShellState extends State<MainShell> {
       appBar: showAppBar
           ? const CustomAppBar(showModeSwitch: true, showDonation: true)
           : null,
-      body: widget.child,
-      bottomNavigationBar: Container(
-        decoration: BoxDecoration(
-          color: Colors.white,
-          boxShadow: [
-            BoxShadow(
-              color: Colors.black.withOpacity(0.1),
-              blurRadius: 10,
-              offset: const Offset(0, -5),
+      body: Column(
+        children: [
+          Expanded(child: widget.child),
+          Container(
+            decoration: BoxDecoration(
+              color: Colors.white,
+              border: Border(top: BorderSide(color: Colors.grey[200]!)),
             ),
-          ],
-        ),
-        child: SafeArea(
-          top: false,
-          child: Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 4),
-            child: Row(
-              mainAxisAlignment: MainAxisAlignment.spaceAround,
-              children: List.generate(_navItems.length, (index) {
-                final item = _navItems[index];
-                final isSelected = _currentIndex == index;
-                return _buildNavItem(
-                  icon: item.icon,
-                  label: item.label,
-                  isSelected: isSelected,
-                  onTap: () => _onTap(index),
-                );
-              }),
+            child: SafeArea(
+              top: false,
+              child: Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 4),
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceAround,
+                  children: List.generate(_navItems.length, (index) {
+                    final item = _navItems[index];
+                    final isSelected = _currentIndex == index;
+                    return _buildNavItem(
+                      icon: item.icon,
+                      label: item.label,
+                      isSelected: isSelected,
+                      onTap: () => _onTap(index),
+                    );
+                  }),
+                ),
+              ),
             ),
           ),
-        ),
+        ],
       ),
     );
   }
@@ -106,16 +104,12 @@ class _MainShellState extends State<MainShell> {
               ),
             ),
             const SizedBox(height: 2),
-            AnimatedOpacity(
-              opacity: isSelected ? 1.0 : 0.0,
-              duration: const Duration(milliseconds: 200),
-              child: Text(
-                label,
-                style: TextStyle(
-                  fontSize: 10,
-                  fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
-                  color: isSelected ? AppTheme.primaryColor : Colors.grey[500],
-                ),
+            Text(
+              label,
+              style: TextStyle(
+                fontSize: 10,
+                fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
+                color: isSelected ? AppTheme.primaryColor : Colors.grey[500],
               ),
             ),
           ],

@@ -1,9 +1,11 @@
+import 'dart:async';
 import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
 import 'package:mobile_scanner/mobile_scanner.dart';
+import '../../../../core/services/scanner_service.dart';
 import '../../../../core/theme/app_theme.dart';
 import '../../../../core/utils/notification_helper.dart';
 import '../../../product/presentation/bloc/product_bloc.dart';
@@ -12,6 +14,7 @@ import '../../../sales/presentation/bloc/sales_bloc.dart';
 import '../../../sales/domain/entities/invoice.dart';
 import '../../../shop/presentation/bloc/shop_bloc.dart';
 import '../bloc/billing_bloc.dart';
+import '../../domain/entities/cart_item.dart';
 
 class AdminHomePage extends StatefulWidget {
   const AdminHomePage({super.key});
@@ -23,9 +26,9 @@ class AdminHomePage extends StatefulWidget {
 class _AdminHomePageState extends State<AdminHomePage>
     with WidgetsBindingObserver {
   MobileScannerController? _scannerController;
+  StreamSubscription<Object?>? _barcodeSubscription;
   bool _isCameraOn = true;
   bool _isFlashOn = false;
-  bool _isControllerReady = false;
   bool _isDisposed = false;
   final Map<String, DateTime> _lastScanTimes = {};
   String _currencySymbol = 'ر.س';
@@ -37,7 +40,9 @@ class _AdminHomePageState extends State<AdminHomePage>
     _navigatingToCheckout = false;
     WidgetsBinding.instance.addObserver(this);
     _loadCurrencySymbol();
-    WidgetsBinding.instance.addPostFrameCallback((_) => _initScannerController());
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!_isDisposed && mounted) _initScanner();
+    });
   }
 
   void _loadCurrencySymbol() {
@@ -49,67 +54,65 @@ class _AdminHomePageState extends State<AdminHomePage>
 
   @override
   void dispose() {
-    _isDisposed = true;
     WidgetsBinding.instance.removeObserver(this);
-    _disposeScannerController();
+    _isDisposed = true;
+    _barcodeSubscription?.cancel();
+    _barcodeSubscription = null;
+    ScannerService().release('AdminHomePage');
     super.dispose();
   }
 
   @override
   void didChangeAppLifecycleState(AppLifecycleState state) {
     if (_isDisposed) return;
-    if (state == AppLifecycleState.paused ||
-        state == AppLifecycleState.inactive) {
-      _stopScanner();
-    } else if (state == AppLifecycleState.resumed && _isCameraOn) {
-      _startScanner();
+    switch (state) {
+      case AppLifecycleState.resumed:
+        if (_isCameraOn) {
+          _barcodeSubscription?.cancel();
+          _barcodeSubscription = _scannerController?.barcodes.listen(_onDetect);
+          ScannerService().start();
+        }
+      case AppLifecycleState.inactive:
+      case AppLifecycleState.paused:
+      case AppLifecycleState.hidden:
+      case AppLifecycleState.detached:
+        _barcodeSubscription?.cancel();
+        _barcodeSubscription = null;
+        ScannerService().stop();
     }
   }
 
-  Future<void> _initScannerController() async {
+  void _initScanner() {
     if (_isDisposed) return;
-    try {
-      _scannerController = MobileScannerController(
-        detectionSpeed: DetectionSpeed.noDuplicates,
-        returnImage: false,
-      );
-      await _scannerController!.start();
-      if (mounted && !_isDisposed) setState(() => _isControllerReady = true);
-    } catch (_) {
-      if (mounted && !_isDisposed) setState(() => _isControllerReady = false);
-    }
+    _scannerController = ScannerService().controller('AdminHomePage');
+    _barcodeSubscription = _scannerController!.barcodes.listen(_onDetect);
+    ScannerService().start();
+    if (mounted && !_isDisposed) setState(() {});
   }
 
-  Future<void> _disposeScannerController() async {
-    _isControllerReady = false;
-    try {
-      await _scannerController?.stop();
-      await _scannerController?.dispose();
-    } catch (_) {}
-    _scannerController = null;
+  void _startScanner() {
+    if (_isDisposed) return;
+    if (_scannerController == null) {
+      _initScanner();
+      return;
+    }
+    _barcodeSubscription?.cancel();
+    _barcodeSubscription = _scannerController!.barcodes.listen(_onDetect);
+    ScannerService().start();
+    if (mounted && !_isDisposed) setState(() {});
   }
 
   void _stopScanner() {
-    try {
-      _scannerController?.stop();
-    } catch (_) {}
+    _barcodeSubscription?.cancel();
+    _barcodeSubscription = null;
+    ScannerService().stop();
   }
 
-  void _startScanner() async {
-    if (_isDisposed) return;
-    try {
-      if (_scannerController == null) {
-        await _initScannerController();
-      } else {
-        await _scannerController!.start();
-      }
-    } catch (_) {}
-  }
-
-  void _onDetect(BarcodeCapture capture) {
-    if (!_isControllerReady || !mounted || _isDisposed) return;
+  void _onDetect(Object? event) {
+    if (!mounted || _isDisposed) return;
+    if (event is! BarcodeCapture) return;
     final now = DateTime.now();
-    for (final barcode in capture.barcodes) {
+    for (final barcode in event.barcodes) {
       final raw = barcode.rawValue;
       if (raw == null) continue;
       if (_lastScanTimes.containsKey(raw) &&
@@ -121,16 +124,6 @@ class _AdminHomePageState extends State<AdminHomePage>
       }
       break;
     }
-  }
-
-  void _goToAdminBilling() {
-    if (_navigatingToCheckout) return;
-    _navigatingToCheckout = true;
-    _stopScanner();
-    context.push('/admin-billing').then((_) {
-      _navigatingToCheckout = false;
-      if (mounted && !_isDisposed && _isCameraOn) _startScanner();
-    });
   }
 
   void _goToCheckout() {
@@ -149,19 +142,40 @@ class _AdminHomePageState extends State<AdminHomePage>
       listeners: [
         BlocListener<BillingBloc, BillingState>(
           listenWhen: (previous, current) =>
-              previous.cartItems.length < current.cartItems.length &&
-              current.cartItems.length == 1,
-          listener: (context, state) {
-            if (mounted) _goToAdminBilling();
-          },
-        ),
-        BlocListener<BillingBloc, BillingState>(
-          listenWhen: (previous, current) =>
               previous.error != current.error && current.error != null,
           listener: (context, state) {
             if (state.error != null) {
               NotificationHelper.show(context, state.error!);
             }
+          },
+        ),
+        BlocListener<BillingBloc, BillingState>(
+          listenWhen: (previous, current) =>
+              previous.warning != current.warning && current.warning != null,
+          listener: (context, state) {
+            if (state.warning != null) {
+              NotificationHelper.show(context, state.warning!);
+            }
+          },
+        ),
+        BlocListener<SalesBloc, SalesState>(
+          listenWhen: (previous, current) =>
+              current.status == SalesStatus.success &&
+              previous.status != current.status,
+          listener: (context, state) {
+            context.read<ProductBloc>().add(LoadProducts());
+            if (state.message != null) {
+              NotificationHelper.show(context, state.message!);
+            }
+          },
+        ),
+        BlocListener<SalesBloc, SalesState>(
+          listenWhen: (previous, current) =>
+              current.status == SalesStatus.error &&
+              previous.status != current.status,
+          listener: (context, state) {
+            NotificationHelper.show(context,
+                state.message ?? 'حدث خطأ أثناء إتمام البيع');
           },
         ),
       ],
@@ -182,7 +196,10 @@ class _AdminHomePageState extends State<AdminHomePage>
               children: [
                 // Scanner section
                 _buildScannerSection(),
-                const SizedBox(height: 20),
+                const SizedBox(height: 16),
+                // مراجعة الطلب button - visible when cart has items
+                _buildReviewOrderButton(),
+                const SizedBox(height: 16),
                 // Today Summary - Horizontal row
                 _buildTodaySummary(),
                 const SizedBox(height: 20),
@@ -200,6 +217,187 @@ class _AdminHomePageState extends State<AdminHomePage>
     );
   }
 
+  Widget _buildReviewOrderButton() {
+    return BlocBuilder<BillingBloc, BillingState>(
+      builder: (context, state) {
+        if (state.cartItems.isEmpty) return const SizedBox.shrink();
+        return Container(
+          decoration: BoxDecoration(
+            color: Colors.white,
+            borderRadius: BorderRadius.circular(16),
+            boxShadow: [
+              BoxShadow(
+                  color: Colors.black.withOpacity(0.04),
+                  blurRadius: 8,
+                  offset: const Offset(0, 2)),
+            ],
+          ),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Padding(
+                padding: const EdgeInsets.fromLTRB(16, 14, 16, 4),
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    const Text('السلة',
+                        style: TextStyle(
+                            fontSize: 15,
+                            fontWeight: FontWeight.bold)),
+                    Text(
+                      '${state.totalAmount.toStringAsFixed(2)} $_currencySymbol',
+                      style: const TextStyle(
+                          fontSize: 16,
+                          fontWeight: FontWeight.bold,
+                          color: AppTheme.primaryColor),
+                    ),
+                  ],
+                ),
+              ),
+              const Divider(height: 1),
+              ListView.separated(
+                shrinkWrap: true,
+                physics: const NeverScrollableScrollPhysics(),
+                padding: const EdgeInsets.all(12),
+                itemCount: state.cartItems.length,
+                separatorBuilder: (_, __) => const SizedBox(height: 8),
+                itemBuilder: (context, index) =>
+                    _buildCartItemCard(state.cartItems[index]),
+              ),
+              Padding(
+                padding: const EdgeInsets.fromLTRB(12, 4, 12, 12),
+                child: SizedBox(
+                  width: double.infinity,
+                  child: ElevatedButton.icon(
+                    onPressed: () => _goToCheckout(),
+                    icon: const Icon(Icons.receipt_long_rounded, size: 18),
+                    label: Text('مراجعة الطلب (${state.cartItems.length})',
+                        style: const TextStyle(
+                            fontSize: 14, fontWeight: FontWeight.bold)),
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: AppTheme.primaryColor,
+                      foregroundColor: Colors.white,
+                      padding: const EdgeInsets.symmetric(vertical: 14),
+                      shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(12)),
+                      elevation: 2,
+                    ),
+                  ),
+                ),
+              ),
+            ],
+          ),
+        );
+      },
+    );
+  }
+
+  Widget _buildCartItemCard(CartItem item) {
+    return Container(
+      padding: const EdgeInsets.all(12),
+      decoration: BoxDecoration(
+        color: const Color(0xFFF8F9FF),
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: const Color(0xFFF0F2F5)),
+      ),
+      child: Row(
+        children: [
+          Container(
+            width: 42,
+            height: 42,
+            decoration: BoxDecoration(
+              color: AppTheme.primaryColor.withOpacity(0.08),
+              borderRadius: BorderRadius.circular(10),
+            ),
+            child: ClipRRect(
+              borderRadius: BorderRadius.circular(10),
+              child: item.product.imageUrl != null && item.product.imageUrl!.isNotEmpty
+                  ? Image.file(
+                      File(item.product.imageUrl!),
+                      fit: BoxFit.cover,
+                      errorBuilder: (_, __, ___) => _buildDefaultImage(),
+                    )
+                  : _buildDefaultImage(),
+            ),
+          ),
+          const SizedBox(width: 10),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(item.product.name,
+                    style: const TextStyle(
+                        fontWeight: FontWeight.w700, fontSize: 13),
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis),
+                const SizedBox(height: 2),
+                Text(
+                  '${item.product.price.toStringAsFixed(2)} $_currencySymbol',
+                  style: const TextStyle(
+                      color: AppTheme.primaryColor,
+                      fontWeight: FontWeight.w800,
+                      fontSize: 12),
+                ),
+              ],
+            ),
+          ),
+          _buildQtyControl(item),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildQtyControl(CartItem item) {
+    return Container(
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(8),
+      ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          _buildQtyBtn(Icons.remove_rounded, () {
+            if (item.quantity > 1) {
+              context.read<BillingBloc>().add(UpdateQuantityEvent(
+                  item.product.id, item.quantity - 1));
+            } else {
+              context.read<BillingBloc>()
+                  .add(RemoveProductFromCartEvent(item.product.id));
+            }
+          }),
+          SizedBox(
+            width: 28,
+            child: Text('${item.quantity}',
+                textAlign: TextAlign.center,
+                style: const TextStyle(
+                    fontWeight: FontWeight.bold, fontSize: 13)),
+          ),
+          _buildQtyBtn(Icons.add_rounded, () {
+            context.read<BillingBloc>().add(
+                UpdateQuantityEvent(item.product.id, item.quantity + 1));
+          }, isAdd: true),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildQtyBtn(IconData icon, VoidCallback onPressed,
+      {bool isAdd = false}) {
+    return Material(
+      color: Colors.transparent,
+      child: InkWell(
+        onTap: onPressed,
+        borderRadius: BorderRadius.circular(6),
+        child: Padding(
+          padding: const EdgeInsets.all(6),
+          child: Icon(icon,
+              size: 16,
+              color: isAdd ? AppTheme.primaryColor : Colors.grey[600]),
+        ),
+      ),
+    );
+  }
+
   Widget _buildScannerSection() {
     return ClipRRect(
       borderRadius: BorderRadius.circular(16),
@@ -210,10 +408,10 @@ class _AdminHomePageState extends State<AdminHomePage>
         ),
         child: Stack(
           children: [
-            if (_isCameraOn && _isControllerReady && _scannerController != null)
+            if (_isCameraOn && _scannerController != null)
               MobileScanner(
+                key: const ValueKey('admin_scanner'),
                 controller: _scannerController!,
-                onDetect: _onDetect,
               )
             else if (!_isCameraOn)
               Container(
@@ -275,32 +473,7 @@ class _AdminHomePageState extends State<AdminHomePage>
                 ],
               ),
             ),
-            // Go to checkout button when items in cart
-            Positioned(
-              bottom: 8,
-              left: 8,
-              right: 8,
-              child: BlocBuilder<BillingBloc, BillingState>(
-                builder: (context, state) {
-                  if (state.cartItems.isEmpty) return const SizedBox.shrink();
-                  return ElevatedButton(
-                    onPressed: () => _goToCheckout(),
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: AppTheme.primaryColor,
-                      foregroundColor: Colors.white,
-                      padding: const EdgeInsets.symmetric(vertical: 12),
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(12),
-                      ),
-                    ),
-                    child: Text(
-                      'مراجعة الطلب (${state.cartItems.length})',
-                      style: const TextStyle(fontWeight: FontWeight.bold),
-                    ),
-                  );
-                },
-              ),
-            ),
+
           ],
         ),
       ),
@@ -392,7 +565,7 @@ class _AdminHomePageState extends State<AdminHomePage>
                       'المبيعات', '$todayCount', Icons.receipt_long_rounded),
                   const SizedBox(width: 10),
                   _buildStatCard('الإيرادات', '$todayRevenue$_currencySymbol',
-                      Icons.trending_up_rounded),
+                      Icons.payments_rounded),
                   const SizedBox(width: 10),
                   _buildStatCard('الأرباح', '$todayProfit$_currencySymbol',
                       Icons.account_balance_wallet_rounded),
@@ -456,10 +629,17 @@ class _AdminHomePageState extends State<AdminHomePage>
     return BlocBuilder<ProductBloc, ProductState>(
       builder: (context, state) {
         // تصفية المنتجات ذات المخزون المنخفض أو القريبة من انتهاء الصلاحية
+        // مع استبعاد المنتجات منتهية الصلاحية (تظهر في قسم منفصل)
+        final now = DateTime.now();
         final lowStockProducts = state.products
-            .where((p) =>
-                p.isAtOrBelowReorderPoint ||
-                (p.daysUntilExpiry != null && p.daysUntilExpiry! <= 30))
+            .where((p) {
+              // استبعاد المنتجات منتهية الصلاحية
+              if (p.expiryDate != null && p.expiryDate!.isBefore(now)) {
+                return false;
+              }
+              return p.isAtOrBelowReorderPoint ||
+                  (p.daysUntilExpiry != null && p.daysUntilExpiry! > 0 && p.daysUntilExpiry! <= 30);
+            })
             .toList();
 
         return Column(
@@ -474,11 +654,11 @@ class _AdminHomePageState extends State<AdminHomePage>
                     Container(
                       padding: const EdgeInsets.all(8),
                       decoration: BoxDecoration(
-                        color: Colors.red.withOpacity(0.1),
+                        color: AppTheme.primaryColor.withOpacity(0.1),
                         borderRadius: BorderRadius.circular(10),
                       ),
                       child: const Icon(Icons.notifications_active_outlined,
-                          color: Colors.red, size: 20),
+                          color: AppTheme.primaryColor, size: 20),
                     ),
                     const SizedBox(width: 10),
                     const Text(
@@ -492,7 +672,7 @@ class _AdminHomePageState extends State<AdminHomePage>
                 ),
                 GestureDetector(
                   onTap: () => context.push('/stock-alerts'),
-                  child: Text(
+                  child: const Text(
                     'عرض الكل',
                     style: TextStyle(
                         fontSize: 12,
@@ -526,19 +706,17 @@ class _AdminHomePageState extends State<AdminHomePage>
                 ),
               )
             else
-              SizedBox(
-                height: 160,
-                child: ListView.separated(
-                  scrollDirection: Axis.horizontal,
-                  itemCount: lowStockProducts.length > 10
-                      ? 10
-                      : lowStockProducts.length,
-                  separatorBuilder: (_, __) => const SizedBox(width: 10),
-                  itemBuilder: (context, index) {
-                    final product = lowStockProducts[index];
-                    return _buildStockAlertCard(product);
-                  },
-                ),
+              ListView.separated(
+                shrinkWrap: true,
+                physics: const NeverScrollableScrollPhysics(),
+                itemCount: lowStockProducts.length > 5
+                    ? 5
+                    : lowStockProducts.length,
+                separatorBuilder: (_, __) => const SizedBox(height: 8),
+                itemBuilder: (context, index) {
+                  final product = lowStockProducts[index];
+                  return _buildStockAlertCard(product);
+                },
               ),
           ],
         );
@@ -551,115 +729,86 @@ class _AdminHomePageState extends State<AdminHomePage>
     final isExpiringSoon = daysUntilExpiry != null && daysUntilExpiry <= 30;
 
     return Container(
-      width: 100,
+      width: double.infinity,
       decoration: BoxDecoration(
         color: Colors.white,
-        borderRadius: BorderRadius.circular(10),
+        borderRadius: BorderRadius.circular(12),
         border: Border.all(
           color: isExpiringSoon
               ? Colors.red.withOpacity(0.3)
               : Colors.orange.withOpacity(0.3),
         ),
-        boxShadow: [
-          BoxShadow(
-              color: Colors.black.withOpacity(0.04),
-              blurRadius: 6,
-              offset: const Offset(0, 1)),
-        ],
       ),
-      child: Stack(
-        children: [
-          Padding(
-            padding: const EdgeInsets.all(8),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                const SizedBox(height: 16),
-                // Product Image
-                Center(
-                  child: Container(
-                    width: 36,
-                    height: 36,
-                    decoration: BoxDecoration(
-                      color: AppTheme.primaryColor.withOpacity(0.1),
-                      borderRadius: BorderRadius.circular(8),
-                    ),
-                    child:
-                        product.imageUrl != null && product.imageUrl!.isNotEmpty
-                            ? ClipRRect(
-                                borderRadius: BorderRadius.circular(8),
-                                child: Image.file(
-                                  File(product.imageUrl!),
-                                  fit: BoxFit.cover,
-                                  errorBuilder: (_, __, ___) =>
-                                      _buildDefaultImage(),
-                                ),
-                              )
-                            : _buildDefaultImage(),
-                  ),
-                ),
-                const SizedBox(height: 6),
-                // Product Name
-                Text(
-                  product.name,
-                  style: const TextStyle(
-                      fontWeight: FontWeight.w600, fontSize: 10),
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
-                ),
-                const SizedBox(height: 2),
-                // Stock
-                Text(
-                  '${product.stock} ${product.unit}',
-                  style: TextStyle(fontSize: 9, color: Colors.grey[600]),
-                ),
-                // Expiry
-                if (daysUntilExpiry != null)
-                  Row(
-                    children: [
-                      Icon(
-                        Icons.event,
-                        size: 10,
-                        color: isExpiringSoon ? Colors.red : Colors.grey[400],
-                      ),
-                      const SizedBox(width: 2),
-                      Text(
-                        '$daysUntilExpiry يوم',
-                        style: TextStyle(
-                            fontSize: 8,
-                            color:
-                                isExpiringSoon ? Colors.red : Colors.grey[500]),
-                      ),
-                    ],
-                  )
-                else
-                  Text(
-                    'لا يوجد',
-                    style: TextStyle(fontSize: 8, color: Colors.grey[400]),
-                  ),
-              ],
-            ),
-          ),
-          // Stock Badge
-          Positioned(
-            top: 4,
-            left: 4,
-            child: Container(
-              padding: const EdgeInsets.symmetric(horizontal: 5, vertical: 2),
+      child: Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+        child: Row(
+          children: [
+            // Product Image
+            Container(
+              width: 44,
+              height: 44,
               decoration: BoxDecoration(
-                color: Colors.red,
-                borderRadius: BorderRadius.circular(6),
+                color: AppTheme.primaryColor.withOpacity(0.1),
+                borderRadius: BorderRadius.circular(10),
               ),
-              child: Text(
-                '${product.stock}',
-                style: const TextStyle(
-                    color: Colors.white,
-                    fontSize: 9,
-                    fontWeight: FontWeight.bold),
+              child:
+                  product.imageUrl != null && product.imageUrl!.isNotEmpty
+                      ? ClipRRect(
+                          borderRadius: BorderRadius.circular(10),
+                          child: Image.file(
+                            File(product.imageUrl!),
+                            fit: BoxFit.cover,
+                            errorBuilder: (_, __, ___) =>
+                                _buildDefaultImage(),
+                          ),
+                        )
+                      : _buildDefaultImage(),
+            ),
+            const SizedBox(width: 12),
+            // Details
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Text(
+                    product.name,
+                    style: const TextStyle(
+                        fontWeight: FontWeight.w600, fontSize: 13),
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                  ),
+                  const SizedBox(height: 4),
+                  Text(
+                    '${product.stock} ${product.unit}',
+                    style: const TextStyle(fontSize: 12, color: AppTheme.primaryColor, fontWeight: FontWeight.w600),
+                  ),
+                  if (daysUntilExpiry != null) ...[
+                    const SizedBox(height: 2),
+                    Row(
+                      children: [
+                        Icon(
+                          Icons.event,
+                          size: 12,
+                          color: isExpiringSoon ? Colors.red : Colors.grey[400],
+                        ),
+                        const SizedBox(width: 4),
+                        Text(
+                          '$daysUntilExpiry يوم متبقي',
+                          style: TextStyle(
+                              fontSize: 11,
+                              color: isExpiringSoon
+                                  ? Colors.red
+                                  : Colors.grey[500]),
+                        ),
+                      ],
+                    ),
+                  ],
+                ],
               ),
             ),
-          ),
-        ],
+          ],
+        ),
       ),
     );
   }
@@ -671,7 +820,7 @@ class _AdminHomePageState extends State<AdminHomePage>
         width: 36,
         height: 36,
         fit: BoxFit.contain,
-        errorBuilder: (_, __, ___) => Icon(
+        errorBuilder: (_, __, ___) => const Icon(
           Icons.inventory_2_outlined,
           color: AppTheme.primaryColor,
           size: 28,

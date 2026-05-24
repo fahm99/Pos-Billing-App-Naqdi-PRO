@@ -3,18 +3,18 @@ import 'package:equatable/equatable.dart';
 import '../../domain/entities/invoice.dart';
 import '../../domain/usecases/sales_usecases.dart';
 import '../../../../core/usecase/usecase.dart';
-
+import '../../../product/domain/usecases/product_usecases.dart';
 part 'sales_event.dart';
 part 'sales_state.dart';
 
 /// SalesBloc - كتلة إدارة المبيعات
-/// التعديل: إضافة تحديث لحظي للمخزون بعد البيع والإرجاع
 class SalesBloc extends Bloc<SalesEvent, SalesState> {
   final GetInvoicesUseCase getInvoicesUseCase;
   final SaveInvoiceUseCase saveInvoiceUseCase;
   final DeleteInvoiceUseCase deleteInvoiceUseCase;
   final CompleteSaleUseCase completeSaleUseCase;
   final ReturnInvoiceUseCase returnInvoiceUseCase;
+  final GetProductsUseCase getProductsUseCase;
 
   SalesBloc({
     required this.getInvoicesUseCase,
@@ -22,6 +22,7 @@ class SalesBloc extends Bloc<SalesEvent, SalesState> {
     required this.deleteInvoiceUseCase,
     required this.completeSaleUseCase,
     required this.returnInvoiceUseCase,
+    required this.getProductsUseCase,
   }) : super(const SalesState()) {
     on<LoadInvoicesEvent>(_onLoad);
     on<SaveInvoiceEvent>(_onSave);
@@ -80,13 +81,35 @@ class SalesBloc extends Bloc<SalesEvent, SalesState> {
     result.fold(
       (f) =>
           emit(state.copyWith(status: SalesStatus.error, message: f.message)),
-      (invoice) {
+      (invoice) async {
+        String message = 'تم إتمام البيع وخصم المخزون';
+
+        // التحقق من المنتجات التي وصلت أو انخفضت عن حد إعادة الطلب
+        final productsResult = await getProductsUseCase(NoParams());
+        productsResult.fold(
+          (_) {},
+          (products) {
+            final reorderProducts = <String>[];
+            for (final item in invoice.items) {
+              final product = products.where((p) => p.id == item.productId).firstOrNull;
+              if (product != null &&
+                  product.stock <= product.minStock) {
+                reorderProducts.add(product.name);
+              }
+            }
+            if (reorderProducts.isNotEmpty) {
+              message += '\n\n⚠️ تنبيه إعادة الطلب:\n';
+              message +=
+                  'المنتجات التالية وصلت لحد الطلب: ${reorderProducts.join('، ')}';
+              message += '\nيجب عليك طلبها وتوفيرها في المخزون';
+            }
+          },
+        );
+
         emit(state.copyWith(
             status: SalesStatus.success,
-            message: 'تم إتمام البيع وخصم المخزون'));
+            message: message));
         add(LoadInvoicesEvent());
-        // تحديث لحظي للمخزون والمنتجات بعد البيع
-        // يتم عبر BlocListener في الواجهة
       },
     );
   }

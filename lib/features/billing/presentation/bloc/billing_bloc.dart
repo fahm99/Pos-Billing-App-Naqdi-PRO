@@ -28,17 +28,39 @@ class BillingBloc extends Bloc<BillingEvent, BillingState> {
     final result = await getProductByBarcodeUseCase(event.barcode);
     result.fold(
       (failure) =>
-          emit(state.copyWith(error: 'المنتج غير موجود: ${event.barcode}')),
+          emit(state.copyWith(error: 'المنتج غير متوفر')),
       (product) {
+        if (product.expiryStatus == ExpiryStatus.expired) {
+          emit(state.copyWith(
+              error: 'المنتج منتهي الصلاحية لا يجوز بيعه'));
+          return;
+        }
         add(AddProductToCartEvent(product));
+        if (product.expiryStatus == ExpiryStatus.critical) {
+          emit(state.copyWith(
+              warning: 'المنتج سينتهي قريباً (${product.daysUntilExpiry} يوم متبقي)'));
+        } else if (product.isBelowReorderPoint) {
+          emit(state.copyWith(
+              warning: 'المنتج أقل من حد إعادة الطلب'));
+        } else if (product.isAtOrBelowReorderPoint) {
+          emit(state.copyWith(
+              warning: 'المنتج وصل لحد إعادة الطلب'));
+        }
       },
     );
   }
 
   void _onAddProductToCart(
       AddProductToCartEvent event, Emitter<BillingState> emit) {
-    // Clear error when adding
-    final cleanState = state.copyWith(error: null);
+    // Clear error and warning when adding
+    final cleanState = state.copyWith(error: null, warning: null);
+
+    // منع إضافة المنتجات منتهية الصلاحية
+    if (event.product.expiryStatus == ExpiryStatus.expired) {
+      emit(state.copyWith(
+          error: 'المنتج منتهي الصلاحية لا يجوز بيعه'));
+      return;
+    }
 
     final existingIndex = cleanState.cartItems
         .indexWhere((item) => item.product.id == event.product.id);
@@ -65,6 +87,18 @@ class BillingBloc extends Bloc<BillingEvent, BillingState> {
       final newItem = CartItem(product: event.product);
       emit(cleanState.copyWith(
           cartItems: [...cleanState.cartItems, newItem], error: null));
+    }
+
+    // تحذيرات بعد الإضافة الناجحة
+    if (event.product.expiryStatus == ExpiryStatus.critical) {
+      emit(state.copyWith(
+          warning: 'المنتج سينتهي قريباً (${event.product.daysUntilExpiry} يوم متبقي)'));
+    } else if (event.product.isAtOrBelowReorderPoint && !event.product.isBelowReorderPoint) {
+      emit(state.copyWith(
+          warning: 'المنتج وصل لحد إعادة الطلب'));
+    } else if (event.product.isBelowReorderPoint) {
+      emit(state.copyWith(
+          warning: 'المنتج أقل من حد إعادة الطلب'));
     }
   }
 

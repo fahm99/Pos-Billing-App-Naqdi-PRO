@@ -1,19 +1,41 @@
+import 'dart:io';
+import 'dart:typed_data';
+import 'dart:ui' as ui;
+
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:flutter/rendering.dart';
 import 'package:go_router/go_router.dart';
 import 'package:intl/intl.dart';
+import 'package:pdf/pdf.dart';
+import 'package:pdf/widgets.dart' as pw;
+import 'package:printing/printing.dart';
+import 'package:share_plus/share_plus.dart';
+import 'package:path_provider/path_provider.dart';
+
 import '../../../../core/theme/app_theme.dart';
 import '../../../../core/utils/printer_helper.dart';
 import '../../../../core/utils/notification_helper.dart';
 import '../../../../core/data/hive_database.dart';
 import '../../../../core/utils/currency_helper.dart';
 import '../../../shop/presentation/bloc/shop_bloc.dart';
+import '../../../shop/domain/entities/shop.dart';
 import '../../domain/entities/invoice.dart';
 import '../bloc/sales_bloc.dart';
 
-class InvoiceDetailPage extends StatelessWidget {
+class InvoiceDetailPage extends StatefulWidget {
   final Invoice invoice;
   const InvoiceDetailPage({super.key, required this.invoice});
+
+  @override
+  State<InvoiceDetailPage> createState() => _InvoiceDetailPageState();
+}
+
+class _InvoiceDetailPageState extends State<InvoiceDetailPage> {
+  final GlobalKey _repaintKey = GlobalKey();
+  bool _isSharing = false;
+
+  Invoice get invoice => widget.invoice;
 
   @override
   Widget build(BuildContext context) {
@@ -30,6 +52,18 @@ class InvoiceDetailPage extends StatelessWidget {
           onPressed: () => context.pop(),
         ),
         actions: [
+          // Share as PDF
+          IconButton(
+            icon: const Icon(Icons.picture_as_pdf, color: Colors.red),
+            tooltip: 'مشاركة كـ PDF',
+            onPressed: _isSharing ? null : () => _shareAsPdf(context),
+          ),
+          // Share as Image
+          IconButton(
+            icon: const Icon(Icons.image_outlined, color: Colors.amber),
+            tooltip: 'مشاركة كصورة',
+            onPressed: _isSharing ? null : () => _shareAsImage(context),
+          ),
           // Reprint button
           IconButton(
             icon: const Icon(Icons.print_outlined),
@@ -50,7 +84,9 @@ class InvoiceDetailPage extends StatelessWidget {
           ),
         ],
       ),
-      body: SingleChildScrollView(
+      body: RepaintBoundary(
+        key: _repaintKey,
+        child: SingleChildScrollView(
         padding: const EdgeInsets.all(16),
         child: Column(
           children: [
@@ -188,6 +224,7 @@ class InvoiceDetailPage extends StatelessWidget {
           ],
         ),
       ),
+        ),
     );
   }
 
@@ -338,6 +375,208 @@ class InvoiceDetailPage extends StatelessWidget {
             },
             child: const Text('حذف', style: TextStyle(color: Colors.red)),
           ),
+        ],
+      ),
+    );
+  }
+
+  Future<void> _shareAsPdf(BuildContext context) async {
+    setState(() => _isSharing = true);
+    try {
+      final shopState = context.read<ShopBloc>().state;
+      if (shopState is! ShopLoaded) {
+        NotificationHelper.show(context, 'لم يتم تحميل بيانات المتجر');
+        return;
+      }
+
+      final bytes = await _generateInvoicePdf(shopState.shop);
+      final dateStr = DateFormat('yyyy-MM-dd').format(invoice.date);
+      await Printing.sharePdf(
+        bytes: bytes,
+        filename: '${invoice.invoiceNumber}_$dateStr.pdf',
+      );
+    } catch (e) {
+      if (context.mounted) {
+        NotificationHelper.show(context, 'فشل مشاركة PDF: $e');
+      }
+    } finally {
+      if (mounted) setState(() => _isSharing = false);
+    }
+  }
+
+  Future<void> _shareAsImage(BuildContext context) async {
+    setState(() => _isSharing = true);
+    try {
+      final boundary = _repaintKey.currentContext?.findRenderObject() as RenderRepaintBoundary?;
+      if (boundary == null) return;
+
+      final image = await boundary.toImage(pixelRatio: 3.0);
+      final byteData = await image.toByteData(format: ui.ImageByteFormat.png);
+      if (byteData == null) return;
+
+      final dir = await getTemporaryDirectory();
+      final file = File('${dir.path}/${invoice.invoiceNumber}.png');
+      await file.writeAsBytes(byteData.buffer.asUint8List());
+
+      await Share.shareXFiles([XFile(file.path)], text: 'فاتورة ${invoice.invoiceNumber}');
+    } catch (e) {
+      if (context.mounted) {
+        NotificationHelper.show(context, 'فشل مشاركة الصورة: $e');
+      }
+    } finally {
+      if (mounted) setState(() => _isSharing = false);
+    }
+  }
+
+  Future<Uint8List> _generateInvoicePdf(Shop shop) async {
+    final doc = pw.Document();
+
+    pw.Font? arabicFont;
+    pw.Font? arabicBold;
+    try {
+      arabicFont = await PdfGoogleFonts.cairoRegular();
+      arabicBold = await PdfGoogleFonts.cairoBold();
+    } catch (_) {
+      try {
+        arabicFont = await PdfGoogleFonts.tajawalRegular();
+        arabicBold = await PdfGoogleFonts.tajawalBold();
+      } catch (_) {
+        try {
+          arabicFont = await PdfGoogleFonts.notoNaskhArabicRegular();
+          arabicBold = await PdfGoogleFonts.notoNaskhArabicBold();
+        } catch (_) {}
+      }
+    }
+
+    final theme = pw.ThemeData.withFont(
+      base: arabicFont ?? pw.Font.helvetica(),
+      bold: arabicBold ?? pw.Font.helveticaBold(),
+    );
+
+    final currencySymbol = shop.currencySymbol.isNotEmpty ? shop.currencySymbol : 'ر.س';
+
+    doc.addPage(
+      pw.MultiPage(
+        theme: theme,
+        pageFormat: PdfPageFormat.a4,
+        margin: const pw.EdgeInsets.all(32),
+        textDirection: pw.TextDirection.rtl,
+        build: (context) => [
+          pw.Row(
+            mainAxisAlignment: pw.MainAxisAlignment.spaceBetween,
+            children: [
+              pw.Column(
+                crossAxisAlignment: pw.CrossAxisAlignment.start,
+                children: [
+                  pw.Text(shop.name,
+                      style: pw.TextStyle(fontSize: 22, fontWeight: pw.FontWeight.bold, font: arabicBold)),
+                  if (shop.addressLine1.isNotEmpty)
+                    pw.Text(shop.addressLine1, style: pw.TextStyle(fontSize: 10, font: arabicFont)),
+                  if (shop.addressLine2.isNotEmpty)
+                    pw.Text(shop.addressLine2, style: pw.TextStyle(fontSize: 10, font: arabicFont)),
+                  if (shop.phoneNumber.isNotEmpty)
+                    pw.Text('الهاتف: ${shop.phoneNumber}', style: pw.TextStyle(fontSize: 10, font: arabicFont)),
+                  if (shop.taxNumber.isNotEmpty)
+                    pw.Text('الرقم الضريبي: ${shop.taxNumber}', style: pw.TextStyle(fontSize: 10, font: arabicFont)),
+                ],
+              ),
+              pw.Column(
+                crossAxisAlignment: pw.CrossAxisAlignment.end,
+                children: [
+                  pw.Text('رقم الفاتورة: ${invoice.invoiceNumber}',
+                      style: pw.TextStyle(fontSize: 12, fontWeight: pw.FontWeight.bold, font: arabicBold)),
+                  pw.Text('التاريخ: ${DateFormat('dd/MM/yyyy HH:mm').format(invoice.date)}',
+                      style: pw.TextStyle(fontSize: 10, font: arabicFont)),
+                ],
+              ),
+            ],
+          ),
+          pw.SizedBox(height: 20),
+          pw.Divider(),
+          pw.SizedBox(height: 12),
+          pw.TableHelper.fromTextArray(
+            headerStyle: pw.TextStyle(fontWeight: pw.FontWeight.bold, fontSize: 11, font: arabicBold),
+            headerAlignment: pw.Alignment.center,
+            cellAlignment: pw.Alignment.centerRight,
+            cellStyle: pw.TextStyle(font: arabicFont),
+            headers: ['الإجمالي', 'الكمية', 'السعر', 'المنتج', '#'],
+            data: List.generate(
+              invoice.items.length,
+              (i) => [
+                '${i + 1}',
+                '${invoice.items[i].quantity}',
+                '$currencySymbol${invoice.items[i].price.toStringAsFixed(2)}',
+                invoice.items[i].productName,
+                '$currencySymbol${invoice.items[i].subtotal.toStringAsFixed(2)}',
+              ],
+            ),
+          ),
+          pw.SizedBox(height: 20),
+          pw.Divider(),
+          pw.SizedBox(height: 10),
+          pw.Column(
+            crossAxisAlignment: pw.CrossAxisAlignment.end,
+            children: [
+              _buildPdfRow('المجموع الفرعي', '$currencySymbol${invoice.subtotal.toStringAsFixed(2)}', arabicFont),
+              if (invoice.discountAmount > 0)
+                _buildPdfRow('الخصم', '-$currencySymbol${invoice.discountAmount.toStringAsFixed(2)}', arabicFont),
+              if (invoice.taxAmount > 0)
+                _buildPdfRow('الضريبة', '$currencySymbol${invoice.taxAmount.toStringAsFixed(2)}', arabicFont),
+              _buildPdfRow('الإجمالي', '$currencySymbol${invoice.totalAmount.toStringAsFixed(2)}', arabicFont,
+                  isBold: true, boldFont: arabicBold),
+            ],
+          ),
+          pw.SizedBox(height: 20),
+          pw.Divider(),
+          pw.SizedBox(height: 10),
+          pw.Column(
+            crossAxisAlignment: pw.CrossAxisAlignment.start,
+            children: [
+              pw.Text('طريقة الدفع: ${_paymentLabel(invoice.paymentMethod)}',
+                  style: pw.TextStyle(fontSize: 11, font: arabicFont)),
+              if (invoice.cashPaid > 0)
+                pw.Text('المبلغ النقدي: $currencySymbol${invoice.cashPaid.toStringAsFixed(2)}',
+                    style: pw.TextStyle(fontSize: 11, font: arabicFont)),
+              if (invoice.changeAmount > 0)
+                pw.Text('الباقي: $currencySymbol${invoice.changeAmount.toStringAsFixed(2)}',
+                    style: pw.TextStyle(fontSize: 11, font: arabicFont)),
+            ],
+          ),
+          if (shop.footerText.isNotEmpty) ...[
+            pw.SizedBox(height: 30),
+            pw.Divider(),
+            pw.SizedBox(height: 10),
+            pw.Paragraph(
+                text: shop.footerText,
+                textAlign: pw.TextAlign.center,
+                style: pw.TextStyle(fontSize: 10, font: arabicFont)),
+          ],
+        ],
+      ),
+    );
+    return doc.save();
+  }
+
+  pw.Widget _buildPdfRow(String label, String value, pw.Font? font,
+      {bool isBold = false, pw.Font? boldFont}) {
+    return pw.Padding(
+      padding: const pw.EdgeInsets.symmetric(vertical: 3),
+      child: pw.Row(
+        mainAxisAlignment: pw.MainAxisAlignment.end,
+        children: [
+          pw.Text(value,
+              textDirection: pw.TextDirection.rtl,
+              style: pw.TextStyle(
+                  fontWeight: isBold ? pw.FontWeight.bold : pw.FontWeight.normal,
+                  font: isBold ? boldFont ?? font : font,
+                  fontSize: isBold ? 13 : 11)),
+          pw.SizedBox(width: 20),
+          pw.Text(label,
+              textDirection: pw.TextDirection.rtl,
+              style: pw.TextStyle(
+                  fontWeight: isBold ? pw.FontWeight.bold : pw.FontWeight.normal,
+                  font: isBold ? boldFont ?? font : font,
+                  fontSize: isBold ? 13 : 11)),
         ],
       ),
     );

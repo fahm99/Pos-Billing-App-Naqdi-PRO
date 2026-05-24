@@ -6,7 +6,6 @@ import 'core/data/hive_database.dart';
 import 'core/service_locator.dart' as di;
 import 'core/theme/app_theme.dart';
 import 'core/utils/currency_helper.dart';
-import 'core/widgets/app_notification.dart';
 import 'features/billing/presentation/bloc/billing_bloc.dart';
 import 'features/product/presentation/bloc/product_bloc.dart';
 import 'features/shop/presentation/bloc/shop_bloc.dart';
@@ -62,8 +61,7 @@ class MyApp extends StatelessWidget {
         listener: (context, state) {
           CurrencyHelper.updateCache(state);
         },
-        child: AppNotification(
-          child: MaterialApp.router(
+        child: MaterialApp.router(
           title: 'نقدي',
           theme: AppTheme.lightTheme,
           routerConfig: router,
@@ -76,7 +74,6 @@ class MyApp extends StatelessWidget {
             GlobalCupertinoLocalizations.delegate,
           ],
         ),
-      ),
       ),
     );
   }

@@ -195,7 +195,7 @@ class _EditProductPageState extends State<EditProductPage> {
         width: 40,
         height: 40,
         fit: BoxFit.contain,
-        errorBuilder: (_, __, ___) => Icon(
+        errorBuilder: (_, __, ___) => const Icon(
           Icons.inventory_2_outlined,
           color: AppTheme.primaryColor,
           size: 28,

@@ -1,9 +1,11 @@
+import 'dart:async';
 import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
 import 'package:mobile_scanner/mobile_scanner.dart';
+import '../../../../core/services/scanner_service.dart';
 import '../../../../core/theme/app_theme.dart';
 import '../../../../core/utils/notification_helper.dart';
 import '../../../../core/widgets/custom_app_bar.dart';
@@ -23,9 +25,9 @@ class ScannerScreen extends StatefulWidget {
 class _ScannerScreenState extends State<ScannerScreen>
     with WidgetsBindingObserver {
   MobileScannerController? _scannerController;
+  StreamSubscription<Object?>? _barcodeSubscription;
   bool _isCameraOn = true;
   bool _isFlashOn = false;
-  bool _isControllerReady = false;
   bool _isDisposed = false;
   final Map<String, DateTime> _lastScanTimes = {};
   static const Duration _scanCooldown = Duration(seconds: 2);
@@ -38,7 +40,9 @@ class _ScannerScreenState extends State<ScannerScreen>
     _navigatingToCheckout = false;
     WidgetsBinding.instance.addObserver(this);
     _loadCurrencySymbol();
-    WidgetsBinding.instance.addPostFrameCallback((_) => _initScannerController());
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!_isDisposed && mounted) _initScanner();
+    });
   }
 
   void _loadCurrencySymbol() {
@@ -50,67 +54,65 @@ class _ScannerScreenState extends State<ScannerScreen>
 
   @override
   void dispose() {
-    _isDisposed = true;
     WidgetsBinding.instance.removeObserver(this);
-    _disposeScannerController();
+    _isDisposed = true;
+    _barcodeSubscription?.cancel();
+    _barcodeSubscription = null;
+    ScannerService().release('ScannerScreen');
     super.dispose();
   }
 
   @override
   void didChangeAppLifecycleState(AppLifecycleState state) {
     if (_isDisposed) return;
-    if (state == AppLifecycleState.paused ||
-        state == AppLifecycleState.inactive) {
-      _stopScanner();
-    } else if (state == AppLifecycleState.resumed && _isCameraOn) {
-      _startScanner();
+    switch (state) {
+      case AppLifecycleState.resumed:
+        if (_isCameraOn) {
+          _barcodeSubscription?.cancel();
+          _barcodeSubscription = _scannerController?.barcodes.listen(_onDetect);
+          ScannerService().start();
+        }
+      case AppLifecycleState.inactive:
+      case AppLifecycleState.paused:
+      case AppLifecycleState.hidden:
+      case AppLifecycleState.detached:
+        _barcodeSubscription?.cancel();
+        _barcodeSubscription = null;
+        ScannerService().stop();
     }
   }
 
-  Future<void> _initScannerController() async {
+  void _initScanner() {
     if (_isDisposed) return;
-    try {
-      _scannerController = MobileScannerController(
-        detectionSpeed: DetectionSpeed.noDuplicates,
-        returnImage: false,
-      );
-      await _scannerController!.start();
-      if (mounted && !_isDisposed) setState(() => _isControllerReady = true);
-    } catch (_) {
-      if (mounted && !_isDisposed) setState(() => _isControllerReady = false);
-    }
+    _scannerController = ScannerService().controller('ScannerScreen');
+    _barcodeSubscription = _scannerController!.barcodes.listen(_onDetect);
+    ScannerService().start();
+    if (mounted && !_isDisposed) setState(() {});
   }
 
-  Future<void> _disposeScannerController() async {
-    _isControllerReady = false;
-    try {
-      await _scannerController?.stop();
-      await _scannerController?.dispose();
-    } catch (_) {}
-    _scannerController = null;
+  void _startScanner() {
+    if (_isDisposed) return;
+    if (_scannerController == null) {
+      _initScanner();
+      return;
+    }
+    _barcodeSubscription?.cancel();
+    _barcodeSubscription = _scannerController!.barcodes.listen(_onDetect);
+    ScannerService().start();
+    if (mounted && !_isDisposed) setState(() {});
   }
 
   void _stopScanner() {
-    try {
-      _scannerController?.stop();
-    } catch (_) {}
+    _barcodeSubscription?.cancel();
+    _barcodeSubscription = null;
+    ScannerService().stop();
   }
 
-  void _startScanner() async {
-    if (_isDisposed) return;
-    try {
-      if (_scannerController == null) {
-        await _initScannerController();
-      } else {
-        await _scannerController!.start();
-      }
-    } catch (_) {}
-  }
-
-  void _onDetect(BarcodeCapture capture) {
-    if (!_isControllerReady || !mounted || _isDisposed) return;
+  void _onDetect(Object? event) {
+    if (!mounted || _isDisposed) return;
+    if (event is! BarcodeCapture) return;
     final now = DateTime.now();
-    for (final barcode in capture.barcodes) {
+    for (final barcode in event.barcodes) {
       final raw = barcode.rawValue;
       if (raw == null) continue;
       if (_lastScanTimes.containsKey(raw) &&
@@ -140,17 +142,19 @@ class _ScannerScreenState extends State<ScannerScreen>
       listeners: [
         BlocListener<BillingBloc, BillingState>(
           listenWhen: (previous, current) =>
-              previous.cartItems.length < current.cartItems.length,
-          listener: (context, state) {
-            if (mounted) _goToCheckout();
-          },
-        ),
-        BlocListener<BillingBloc, BillingState>(
-          listenWhen: (previous, current) =>
               previous.error != current.error && current.error != null,
           listener: (context, state) {
             if (state.error != null) {
               NotificationHelper.show(context, state.error!);
+            }
+          },
+        ),
+        BlocListener<BillingBloc, BillingState>(
+          listenWhen: (previous, current) =>
+              previous.warning != current.warning && current.warning != null,
+          listener: (context, state) {
+            if (state.warning != null) {
+              NotificationHelper.show(context, state.warning!);
             }
           },
         ),
@@ -160,6 +164,18 @@ class _ScannerScreenState extends State<ScannerScreen>
               previous.status != current.status,
           listener: (context, state) {
             context.read<ProductBloc>().add(LoadProducts());
+            if (state.message != null) {
+              NotificationHelper.show(context, state.message!);
+            }
+          },
+        ),
+        BlocListener<SalesBloc, SalesState>(
+          listenWhen: (previous, current) =>
+              current.status == SalesStatus.error &&
+              previous.status != current.status,
+          listener: (context, state) {
+            NotificationHelper.show(context,
+                state.message ?? 'حدث خطأ أثناء إتمام البيع');
           },
         ),
       ],
@@ -197,10 +213,29 @@ class _ScannerScreenState extends State<ScannerScreen>
         fit: StackFit.expand,
         children: [
           // Camera View
-          if (_isCameraOn && _isControllerReady && _scannerController != null)
+          if (_isCameraOn && _scannerController != null)
             MobileScanner(
+              key: const ValueKey('scanner'),
               controller: _scannerController!,
-              onDetect: _onDetect,
+              errorBuilder: (context, error, child) {
+                return Container(
+                  color: const Color(0xFF1E293B),
+                  child: const Center(
+                    child: Column(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Icon(Icons.error_outline, color: Colors.white70, size: 48),
+                        SizedBox(height: 12),
+                        Text(
+                          'تعذر تشغيل الكاميرا',
+                          style: TextStyle(color: Colors.white70, fontSize: 16),
+                          textAlign: TextAlign.center,
+                        ),
+                      ],
+                    ),
+                  ),
+                );
+              },
             )
           else if (!_isCameraOn)
             Container(
@@ -560,7 +595,7 @@ class _ScannerScreenState extends State<ScannerScreen>
         width: 28,
         height: 28,
         fit: BoxFit.contain,
-        errorBuilder: (_, __, ___) => Icon(
+        errorBuilder: (_, __, ___) => const Icon(
           Icons.inventory_2_outlined,
           color: AppTheme.primaryColor,
           size: 24,
