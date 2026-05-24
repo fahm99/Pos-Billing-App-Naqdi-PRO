@@ -5,7 +5,6 @@ import 'package:flutter/services.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
 import 'package:mobile_scanner/mobile_scanner.dart';
-import '../../../../core/services/scanner_service.dart';
 import '../../../../core/theme/app_theme.dart';
 import '../../../../core/utils/notification_helper.dart';
 import '../../../../core/widgets/custom_app_bar.dart';
@@ -58,7 +57,9 @@ class _ScannerScreenState extends State<ScannerScreen>
     _isDisposed = true;
     _barcodeSubscription?.cancel();
     _barcodeSubscription = null;
-    ScannerService().release('ScannerScreen');
+    _scannerController?.stop();
+    _scannerController?.dispose();
+    _scannerController = null;
     super.dispose();
   }
 
@@ -67,10 +68,10 @@ class _ScannerScreenState extends State<ScannerScreen>
     if (_isDisposed) return;
     switch (state) {
       case AppLifecycleState.resumed:
-        if (_isCameraOn) {
+        if (_isCameraOn && _scannerController != null) {
           _barcodeSubscription?.cancel();
           _barcodeSubscription = _scannerController?.barcodes.listen(_onDetect);
-          ScannerService().start();
+          try { _scannerController?.start(); } catch (_) {}
         }
       case AppLifecycleState.inactive:
       case AppLifecycleState.paused:
@@ -78,15 +79,18 @@ class _ScannerScreenState extends State<ScannerScreen>
       case AppLifecycleState.detached:
         _barcodeSubscription?.cancel();
         _barcodeSubscription = null;
-        ScannerService().stop();
+        try { _scannerController?.stop(); } catch (_) {}
     }
   }
 
   void _initScanner() {
     if (_isDisposed) return;
-    _scannerController = ScannerService().controller('ScannerScreen');
+    _scannerController = MobileScannerController(
+      detectionSpeed: DetectionSpeed.noDuplicates,
+      returnImage: false,
+    );
     _barcodeSubscription = _scannerController!.barcodes.listen(_onDetect);
-    ScannerService().start();
+    try { _scannerController!.start(); } catch (_) {}
     if (mounted && !_isDisposed) setState(() {});
   }
 
@@ -98,14 +102,14 @@ class _ScannerScreenState extends State<ScannerScreen>
     }
     _barcodeSubscription?.cancel();
     _barcodeSubscription = _scannerController!.barcodes.listen(_onDetect);
-    ScannerService().start();
+    try { _scannerController!.start(); } catch (_) {}
     if (mounted && !_isDisposed) setState(() {});
   }
 
   void _stopScanner() {
     _barcodeSubscription?.cancel();
     _barcodeSubscription = null;
-    ScannerService().stop();
+    try { _scannerController?.stop(); } catch (_) {}
   }
 
   void _onDetect(Object? event) {
