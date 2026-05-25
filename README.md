@@ -177,7 +177,11 @@ The APKs will be available in `build/app/outputs/flutter-apk/`
 
 ## 📸 Screenshots
 
-> Coming soon...
+<p align="center">
+  <img src="assets/screens/home.jpg" alt="Home Screen" width="300">
+  <br>
+  <em>الواجهة الرئيسية - شاشة الماسح الضوئي ونظام البيع</em>
+</p>
 
 ---
 
