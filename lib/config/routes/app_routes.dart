@@ -29,6 +29,7 @@ import '../../features/expenses/presentation/pages/expenses_page.dart';
 import '../../features/zakat/presentation/pages/zakat_dashboard_page.dart';
 import '../../features/debts/presentation/pages/debts_page.dart';
 import '../../features/debts/presentation/pages/debt_detail_page.dart';
+import '../../features/debts/presentation/pages/notifications_page.dart';
 
 final router = GoRouter(
   initialLocation: '/splash',
@@ -126,10 +127,7 @@ final router = GoRouter(
     // Unified Notifications Page (Phase 5)
     GoRoute(
       path: '/notifications',
-      builder: (context, state) => const _PhasePlaceholderPage(
-        title: 'الإشعارات',
-        phase: 5,
-      ),
+      builder: (context, state) => const NotificationsPage(),
     ),
     // Main shell with bottom navigation
     ShellRoute(

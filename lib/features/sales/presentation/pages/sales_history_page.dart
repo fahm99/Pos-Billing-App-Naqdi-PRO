@@ -3,7 +3,9 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
 import 'package:intl/intl.dart';
 import '../../../../core/theme/app_theme.dart';
+import '../../../../core/utils/currency_helper.dart';
 import '../../../shop/presentation/bloc/shop_bloc.dart';
+import '../../../expenses/presentation/bloc/expense_bloc.dart';
 import '../../domain/entities/invoice.dart';
 import '../bloc/sales_bloc.dart';
 
@@ -296,18 +298,31 @@ class _SalesHistoryPageState extends State<SalesHistoryPage>
     final todayProfit = todayInvoices.fold(0.0, (s, i) => s + i.totalProfit);
     final monthProfit = monthInvoices.fold(0.0, (s, i) => s + i.totalProfit);
 
+    final expenseState = context.read<ExpenseBloc>().state;
+    final allExpenses = expenseState.expenses;
+    final todayExpenses = allExpenses
+        .where((e) =>
+            e.date.year == now.year &&
+            e.date.month == now.month &&
+            e.date.day == now.day)
+        .fold<double>(0, (s, e) => s + e.amount);
+    final monthExpenses = allExpenses
+        .where((e) => e.date.year == now.year && e.date.month == now.month)
+        .fold<double>(0, (s, e) => s + e.amount);
+    final totalExpenses = allExpenses.fold<double>(0, (s, e) => s + e.amount);
+
     return SingleChildScrollView(
       padding: const EdgeInsets.all(16),
       child: Column(
         children: [
-          _buildReportSection(
-              'اليوم', todayInvoices.length, todayRevenue, todayProfit),
+          _buildReportSection('اليوم', todayInvoices.length, todayRevenue,
+              todayProfit, todayExpenses),
           const SizedBox(height: 16),
-          _buildReportSection(
-              'هذا الشهر', monthInvoices.length, monthRevenue, monthProfit),
+          _buildReportSection('هذا الشهر', monthInvoices.length, monthRevenue,
+              monthProfit, monthExpenses),
           const SizedBox(height: 16),
           _buildReportSection('الإجمالي', state.invoiceCount,
-              state.totalRevenue, state.totalProfit),
+              state.totalRevenue, state.totalProfit, totalExpenses),
           const SizedBox(height: 24),
           if (state.invoices.isNotEmpty) _buildTopProducts(state.invoices),
         ],
@@ -315,15 +330,17 @@ class _SalesHistoryPageState extends State<SalesHistoryPage>
     );
   }
 
-  Widget _buildReportSection(
-      String title, int count, double revenue, double profit) {
+  Widget _buildReportSection(String title, int count, double revenue,
+      double profit, double expenses) {
+    final currency = CurrencyHelper.getCurrencySymbol(context);
     return Container(
       decoration: BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.circular(16),
         border: Border.all(color: Colors.grey[200]!),
         boxShadow: const [
-          BoxShadow(color: Colors.black12, blurRadius: 6, offset: Offset(0, 2))
+          BoxShadow(
+              color: Colors.black12, blurRadius: 6, offset: Offset(0, 2))
         ],
       ),
       padding: const EdgeInsets.all(16),
@@ -339,20 +356,27 @@ class _SalesHistoryPageState extends State<SalesHistoryPage>
               Expanded(
                   child: _buildStatCard(
                       'الفواتير', '$count', Icons.receipt_long, Colors.blue)),
-              const SizedBox(width: 10),
+              const SizedBox(width: 6),
               Expanded(
                   child: _buildStatCard(
                       'الإيرادات',
-                      '$_currencySymbol${revenue.toStringAsFixed(0)}',
+                      '$currency${revenue.toStringAsFixed(0)}',
                       Icons.attach_money,
                       AppTheme.primaryColor)),
-              const SizedBox(width: 10),
+              const SizedBox(width: 6),
               Expanded(
                   child: _buildStatCard(
                       'الأرباح',
-                      '$_currencySymbol${profit.toStringAsFixed(0)}',
+                      '$currency${profit.toStringAsFixed(0)}',
                       Icons.trending_up,
                       Colors.orange)),
+              const SizedBox(width: 6),
+              Expanded(
+                  child: _buildStatCard(
+                      'المصروفات',
+                      '$currency${expenses.toStringAsFixed(0)}',
+                      Icons.money_off,
+                      Colors.red)),
             ],
           ),
         ],

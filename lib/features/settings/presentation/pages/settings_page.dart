@@ -185,6 +185,12 @@ class _SettingsPageState extends State<SettingsPage> {
         subtitle: 'حساب الزكاة',
         onTap: () => context.push('/zakat'),
       ),
+      _ManagementItem(
+        icon: Icons.notifications_outlined,
+        title: 'الإشعارات',
+        subtitle: 'تنبيهات الديون',
+        onTap: () => context.push('/notifications'),
+      ),
     ];
 
     return Container(
