@@ -25,6 +25,7 @@ import '../../features/billing/presentation/pages/print_options_page.dart';
 import '../../features/billing/presentation/pages/admin_billing_page.dart';
 import '../../features/setup/presentation/pages/setup_page.dart';
 import '../../features/customers/presentation/pages/customers_page.dart';
+import '../../features/expenses/presentation/pages/expenses_page.dart';
 
 final router = GoRouter(
   initialLocation: '/splash',
@@ -100,10 +101,7 @@ final router = GoRouter(
     // Expenses Management (Phase 2)
     GoRoute(
       path: '/expenses',
-      builder: (context, state) => const _PhasePlaceholderPage(
-        title: 'إدارة المصروفات',
-        phase: 2,
-      ),
+      builder: (context, state) => const ExpensesPage(),
     ),
     // Zakat Dashboard (Phase 3)
     GoRoute(

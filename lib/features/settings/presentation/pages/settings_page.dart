@@ -181,10 +181,7 @@ class _SettingsPageState extends State<SettingsPage> {
         icon: Icons.receipt_long_outlined,
         title: 'إدارة المصروفات',
         subtitle: 'تسجيل المصروفات',
-        onTap: () {
-          NotificationHelper.show(context, 'سيتم إضافة الميزة قريباً');
-        },
-        isComingSoon: true,
+        onTap: () => context.push('/expenses'),
       ),
       _ManagementItem(
         icon: Icons.volunteer_activism_outlined,

@@ -28,6 +28,10 @@ import '../../features/auth/presentation/cubit/auth_cubit.dart';
 import '../../features/inventory/data/repositories/inventory_repository_impl.dart';
 import '../../features/inventory/domain/repositories/inventory_repository.dart';
 import '../../features/inventory/presentation/bloc/inventory_bloc.dart';
+import '../../features/expenses/data/repositories/expense_repository_impl.dart';
+import '../../features/expenses/domain/repositories/expense_repository.dart';
+import '../../features/expenses/domain/usecases/expense_usecases.dart';
+import '../../features/expenses/presentation/bloc/expense_bloc.dart';
 
 final sl = GetIt.instance;
 
@@ -121,4 +125,20 @@ Future<void> init() async {
       ));
   sl.registerLazySingleton<InventoryRepository>(
       () => InventoryRepositoryImpl());
+
+  // ── Expenses ─────────────────────────────────────────────
+  sl.registerFactory(() => ExpenseBloc(
+        getExpensesUseCase: sl(),
+        addExpenseUseCase: sl(),
+        updateExpenseUseCase: sl(),
+        deleteExpenseUseCase: sl(),
+        getExpenseSummaryUseCase: sl(),
+      ));
+  sl.registerLazySingleton(() => GetExpensesUseCase(sl()));
+  sl.registerLazySingleton(() => AddExpenseUseCase(sl()));
+  sl.registerLazySingleton(() => UpdateExpenseUseCase(sl()));
+  sl.registerLazySingleton(() => DeleteExpenseUseCase(sl()));
+  sl.registerLazySingleton(() => GetExpenseSummaryUseCase(sl()));
+  sl.registerLazySingleton<ExpenseRepository>(
+      () => ExpenseRepositoryImpl());
 }
