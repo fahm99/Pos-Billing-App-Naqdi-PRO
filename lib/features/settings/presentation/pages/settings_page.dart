@@ -37,12 +37,6 @@ class _SettingsPageState extends State<SettingsPage> {
           children: [
             const SizedBox(height: 24),
 
-            // Management Section - Grid View
-            _buildSectionHeader('الإدارة'),
-            _buildManagementGrid(),
-
-            const SizedBox(height: 24),
-
             // Hardware Section
             _buildSectionHeader('الأجهزة'),
             _buildListGroup(
@@ -147,147 +141,6 @@ class _SettingsPageState extends State<SettingsPage> {
     );
   }
 
-  Widget _buildManagementGrid() {
-    final managementItems = [
-      _ManagementItem(
-        icon: Icons.people_outline,
-        title: 'العملاء',
-        subtitle: 'إدارة العملاء',
-        onTap: () => context.push('/customers'),
-      ),
-      _ManagementItem(
-        icon: Icons.local_shipping_outlined,
-        title: 'الموردون',
-        subtitle: 'إدارة الموردين',
-        onTap: () => context.push('/suppliers'),
-      ),
-      _ManagementItem(
-        icon: Icons.storefront,
-        title: 'بيانات المتجر',
-        subtitle: 'تعديل معلومات النشاط',
-        onTap: () => context.push('/shop'),
-      ),
-      _ManagementItem(
-        icon: Icons.account_balance_wallet_outlined,
-        title: 'إدارة الديون',
-        subtitle: 'إدارة ديون العملاء',
-        onTap: () => context.push('/debts'),
-      ),
-      _ManagementItem(
-        icon: Icons.receipt_long_outlined,
-        title: 'إدارة المصروفات',
-        subtitle: 'تسجيل المصروفات',
-        onTap: () => context.push('/expenses'),
-      ),
-      _ManagementItem(
-        icon: Icons.volunteer_activism_outlined,
-        title: 'الزكاة والدخل',
-        subtitle: 'حساب الزكاة',
-        onTap: () => context.push('/zakat'),
-      ),
-      _ManagementItem(
-        icon: Icons.notifications_outlined,
-        title: 'الإشعارات',
-        subtitle: 'تنبيهات الديون',
-        onTap: () => context.push('/notifications'),
-      ),
-    ];
-
-    return Container(
-      margin: const EdgeInsets.symmetric(horizontal: 16),
-      child: GridView.builder(
-        shrinkWrap: true,
-        physics: const NeverScrollableScrollPhysics(),
-        gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-          crossAxisCount: 3,
-          crossAxisSpacing: 10,
-          mainAxisSpacing: 10,
-          childAspectRatio: 0.85,
-        ),
-        itemCount: managementItems.length,
-        itemBuilder: (context, index) {
-          final item = managementItems[index];
-          return _buildGridItem(item);
-        },
-      ),
-    );
-  }
-
-  Widget _buildGridItem(_ManagementItem item) {
-    return Tooltip(
-      message: item.isComingSoon ? 'قريباً' : '',
-      child: InkWell(
-        onTap: item.onTap,
-        borderRadius: BorderRadius.circular(12),
-        child: Container(
-          decoration: BoxDecoration(
-            color: Colors.white,
-            borderRadius: BorderRadius.circular(12),
-            border: Border.all(color: Colors.grey[100]!),
-          ),
-          child: Stack(
-            children: [
-              Column(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  Container(
-                    width: 48,
-                    height: 48,
-                    decoration: BoxDecoration(
-                      color: AppTheme.primaryColor.withOpacity(0.1),
-                      borderRadius: BorderRadius.circular(12),
-                    ),
-                    child:
-                        Icon(item.icon, color: AppTheme.primaryColor, size: 24),
-                  ),
-                  const SizedBox(height: 8),
-                  Text(
-                    item.title,
-                    style: const TextStyle(
-                      fontWeight: FontWeight.w600,
-                      fontSize: 12,
-                    ),
-                    textAlign: TextAlign.center,
-                  ),
-                  const SizedBox(height: 2),
-                  Text(
-                    item.subtitle,
-                    style: TextStyle(fontSize: 10, color: Colors.grey[500]),
-                    textAlign: TextAlign.center,
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
-                  ),
-                ],
-              ),
-              if (item.isComingSoon)
-                Positioned(
-                  top: 4,
-                  left: 4,
-                  child: Container(
-                    padding:
-                        const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
-                    decoration: BoxDecoration(
-                      color: Colors.orange[100],
-                      borderRadius: BorderRadius.circular(6),
-                      border: Border.all(color: Colors.orange[200]!),
-                    ),
-                    child: Text(
-                      'قريباً',
-                      style: TextStyle(
-                        fontSize: 8,
-                        fontWeight: FontWeight.bold,
-                        color: Colors.orange[700],
-                      ),
-                    ),
-                  ),
-                ),
-            ],
-          ),
-        ),
-      ),
-    );
-  }
-
   Widget _buildSectionHeader(String title) {
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 8),
@@ -383,13 +236,11 @@ class _ManagementItem {
   final String title;
   final String subtitle;
   final VoidCallback onTap;
-  final bool isComingSoon;
 
   const _ManagementItem({
     required this.icon,
     required this.title,
     required this.subtitle,
     required this.onTap,
-    this.isComingSoon = false,
   });
 }

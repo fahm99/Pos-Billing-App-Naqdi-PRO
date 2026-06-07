@@ -219,6 +219,9 @@ class _AdminHomePageState extends State<AdminHomePage>
                 // Stock Alerts Section
                 _buildStockAlertsSection(),
                 const SizedBox(height: 20),
+                // الإدارة السريعة
+                _buildQuickManagementSection(),
+                const SizedBox(height: 20),
                 // Recent Invoices
                 _buildRecentInvoices(),
                 const SizedBox(height: 90),
@@ -842,6 +845,139 @@ class _AdminHomePageState extends State<AdminHomePage>
     );
   }
 
+  Widget _buildQuickManagementSection() {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Row(
+          children: [
+            Container(
+              padding: const EdgeInsets.all(8),
+              decoration: BoxDecoration(
+                color: AppTheme.primaryColor.withOpacity(0.1),
+                borderRadius: BorderRadius.circular(10),
+              ),
+              child: const Icon(Icons.grid_view_rounded,
+                  color: AppTheme.primaryColor, size: 20),
+            ),
+            const SizedBox(width: 10),
+            const Text(
+              'الإدارة السريعة',
+              style: TextStyle(
+                  fontSize: 16,
+                  fontWeight: FontWeight.bold,
+                  color: Color(0xFF1A1C1E)),
+            ),
+          ],
+        ),
+        const SizedBox(height: 12),
+        GridView.builder(
+          shrinkWrap: true,
+          physics: const NeverScrollableScrollPhysics(),
+          gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+            crossAxisCount: 3,
+            crossAxisSpacing: 10,
+            mainAxisSpacing: 10,
+            childAspectRatio: 0.85,
+          ),
+          itemCount: _managementItems.length,
+          itemBuilder: (context, index) =>
+              _buildGridItem(_managementItems[index]),
+        ),
+      ],
+    );
+  }
+
+  List<_ManagementItem> get _managementItems => [
+        _ManagementItem(
+          icon: Icons.people_outline,
+          title: 'العملاء',
+          subtitle: 'إدارة العملاء',
+          onTap: () => context.push('/customers'),
+        ),
+        _ManagementItem(
+          icon: Icons.local_shipping_outlined,
+          title: 'الموردون',
+          subtitle: 'إدارة الموردين',
+          onTap: () => context.push('/suppliers'),
+        ),
+        _ManagementItem(
+          icon: Icons.storefront,
+          title: 'بيانات المتجر',
+          subtitle: 'تعديل معلومات النشاط',
+          onTap: () => context.push('/shop'),
+        ),
+        _ManagementItem(
+          icon: Icons.account_balance_wallet_outlined,
+          title: 'إدارة الديون',
+          subtitle: 'إدارة ديون العملاء',
+          onTap: () => context.push('/debts'),
+        ),
+        _ManagementItem(
+          icon: Icons.receipt_long_outlined,
+          title: 'إدارة المصروفات',
+          subtitle: 'تسجيل المصروفات',
+          onTap: () => context.push('/expenses'),
+        ),
+        _ManagementItem(
+          icon: Icons.volunteer_activism_outlined,
+          title: 'الزكاة والدخل',
+          subtitle: 'حساب الزكاة',
+          onTap: () => context.push('/zakat'),
+        ),
+        _ManagementItem(
+          icon: Icons.notifications_outlined,
+          title: 'الإشعارات',
+          subtitle: 'تنبيهات الديون',
+          onTap: () => context.push('/notifications'),
+        ),
+      ];
+
+  Widget _buildGridItem(_ManagementItem item) {
+    return InkWell(
+      onTap: item.onTap,
+      borderRadius: BorderRadius.circular(12),
+      child: Container(
+        decoration: BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.circular(12),
+          border: Border.all(color: Colors.grey[100]!),
+        ),
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Container(
+              width: 48,
+              height: 48,
+              decoration: BoxDecoration(
+                color: AppTheme.primaryColor.withOpacity(0.1),
+                borderRadius: BorderRadius.circular(12),
+              ),
+              child: Icon(item.icon, color: AppTheme.primaryColor, size: 24),
+            ),
+            const SizedBox(height: 8),
+            Text(
+              item.title,
+              style: const TextStyle(
+                fontWeight: FontWeight.w600,
+                fontSize: 12,
+              ),
+              textAlign: TextAlign.center,
+            ),
+            const SizedBox(height: 2),
+            Text(
+              item.subtitle,
+              style: TextStyle(fontSize: 10, color: Colors.grey[500]),
+              textAlign: TextAlign.center,
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
   Widget _buildRecentInvoices() {
     return BlocBuilder<SalesBloc, SalesState>(
       builder: (context, state) {
@@ -937,4 +1073,18 @@ class _AdminHomePageState extends State<AdminHomePage>
       ),
     );
   }
+}
+
+class _ManagementItem {
+  final IconData icon;
+  final String title;
+  final String subtitle;
+  final VoidCallback onTap;
+
+  const _ManagementItem({
+    required this.icon,
+    required this.title,
+    required this.subtitle,
+    required this.onTap,
+  });
 }
