@@ -58,7 +58,7 @@ class _ScannerScreenState extends State<ScannerScreen>
   void _loadCurrencySymbol() {
     final shopState = context.read<ShopBloc>().state;
     if (shopState is ShopLoaded && shopState.shop.currencySymbol.isNotEmpty) {
-      setState(() => _currencySymbol = shopState.shop.currencySymbol);
+      _currencySymbol = shopState.shop.currencySymbol;
     }
   }
 
@@ -68,19 +68,22 @@ class _ScannerScreenState extends State<ScannerScreen>
     _isDisposed = true;
     _barcodeSubscription?.cancel();
     _barcodeSubscription = null;
-    ScannerService().release('ScannerScreen');
+    if (_scannerController != null) {
+      ScannerService().disposeController(_scannerController!);
+      _scannerController = null;
+    }
     super.dispose();
   }
 
   @override
   void didChangeAppLifecycleState(AppLifecycleState state) {
-    if (_isDisposed) return;
+    if (_isDisposed || _scannerController == null) return;
     switch (state) {
       case AppLifecycleState.resumed:
         if (_isCameraOn) {
           _barcodeSubscription?.cancel();
-          _barcodeSubscription = _scannerController?.barcodes.listen(_onDetect);
-          ScannerService().start();
+          _barcodeSubscription = _scannerController!.barcodes.listen(_onDetect);
+          ScannerService().startController(_scannerController!);
         }
       case AppLifecycleState.inactive:
       case AppLifecycleState.paused:
@@ -88,34 +91,32 @@ class _ScannerScreenState extends State<ScannerScreen>
       case AppLifecycleState.detached:
         _barcodeSubscription?.cancel();
         _barcodeSubscription = null;
-        ScannerService().stop();
+        ScannerService().stopController(_scannerController!);
     }
   }
 
   void _initScanner() {
     if (_isDisposed) return;
-    _scannerController = ScannerService().controller('ScannerScreen');
+    _scannerController = ScannerService().createController();
     _barcodeSubscription = _scannerController!.barcodes.listen(_onDetect);
-    ScannerService().start();
+    ScannerService().startController(_scannerController!);
     if (mounted && !_isDisposed) setState(() {});
   }
 
   void _startScanner() {
-    if (_isDisposed) return;
-    if (_scannerController == null) {
-      _initScanner();
-      return;
-    }
+    if (_isDisposed || _scannerController == null) return;
     _barcodeSubscription?.cancel();
     _barcodeSubscription = _scannerController!.barcodes.listen(_onDetect);
-    ScannerService().start();
+    ScannerService().startController(_scannerController!);
     if (mounted && !_isDisposed) setState(() {});
   }
 
   void _stopScanner() {
     _barcodeSubscription?.cancel();
     _barcodeSubscription = null;
-    ScannerService().stop();
+    if (_scannerController != null) {
+      ScannerService().stopController(_scannerController!);
+    }
   }
 
   void _onDetect(Object? event) {
@@ -142,7 +143,9 @@ class _ScannerScreenState extends State<ScannerScreen>
     _stopScanner();
     context.push('/checkout').then((_) {
       _navigatingToCheckout = false;
-      if (mounted && !_isDisposed && _isCameraOn) _startScanner();
+      if (mounted && !_isDisposed && _isCameraOn && _scannerController != null) {
+        _startScanner();
+      }
     });
   }
 

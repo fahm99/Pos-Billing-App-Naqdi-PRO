@@ -11,7 +11,7 @@ class ScannerPage extends StatefulWidget {
   State<ScannerPage> createState() => _ScannerPageState();
 }
 
-class _ScannerPageState extends State<ScannerPage> {
+class _ScannerPageState extends State<ScannerPage> with WidgetsBindingObserver {
   MobileScannerController? _controller;
   bool _isReady = false;
   bool _scanned = false;
@@ -20,6 +20,7 @@ class _ScannerPageState extends State<ScannerPage> {
   @override
   void initState() {
     super.initState();
+    WidgetsBinding.instance.addObserver(this);
     WidgetsBinding.instance.addPostFrameCallback((_) => _initController());
   }
 
@@ -29,6 +30,7 @@ class _ScannerPageState extends State<ScannerPage> {
       _controller = MobileScannerController(
         detectionSpeed: DetectionSpeed.noDuplicates,
         returnImage: false,
+        autoStart: false,
       );
       await _controller!.start();
       if (mounted && !_isDisposed) setState(() => _isReady = true);
@@ -38,7 +40,24 @@ class _ScannerPageState extends State<ScannerPage> {
   }
 
   @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    if (_isDisposed || _controller == null) return;
+    switch (state) {
+      case AppLifecycleState.resumed:
+        if (!_scanned) {
+          _controller?.start();
+        }
+      case AppLifecycleState.inactive:
+      case AppLifecycleState.paused:
+      case AppLifecycleState.hidden:
+      case AppLifecycleState.detached:
+        _controller?.stop();
+    }
+  }
+
+  @override
   void dispose() {
+    WidgetsBinding.instance.removeObserver(this);
     _isDisposed = true;
     _controller?.stop();
     _controller?.dispose();

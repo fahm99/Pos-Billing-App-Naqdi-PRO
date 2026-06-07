@@ -1,4 +1,3 @@
-import 'dart:async';
 import 'package:mobile_scanner/mobile_scanner.dart';
 
 class ScannerService {
@@ -9,45 +8,34 @@ class ScannerService {
   /// يتم تعيينه عند إتمام عملية بيع للعودة للكاميرا بحالة إيقاف
   static bool saleJustCompleted = false;
 
-  MobileScannerController? _controller;
-  int _referenceCount = 0;
-
-  MobileScannerController controller(String widgetKey) {
-    _referenceCount++;
-    _controller ??= MobileScannerController(
-      detectionSpeed: DetectionSpeed.noDuplicates,
-      returnImage: false,
-      autoStart: false,
+  MobileScannerController createController({
+    DetectionSpeed detectionSpeed = DetectionSpeed.noDuplicates,
+    bool returnImage = false,
+    bool autoStart = false,
+  }) {
+    return MobileScannerController(
+      detectionSpeed: detectionSpeed,
+      returnImage: returnImage,
+      autoStart: autoStart,
     );
-    return _controller!;
   }
 
-  Future<void> start() async {
+  Future<void> startController(MobileScannerController controller) async {
     try {
-      await _controller?.start();
+      await controller.start();
     } catch (_) {}
   }
 
-  void stop() {
+  void stopController(MobileScannerController controller) {
     try {
-      _controller?.stop();
+      controller.stop();
     } catch (_) {}
   }
 
-  void release(String widgetKey) {
-    _referenceCount--;
-    if (_referenceCount <= 0) {
-      _referenceCount = 0;
-      dispose();
-    }
-  }
-
-  void dispose() {
-    _referenceCount = 0;
+  Future<void> disposeController(MobileScannerController controller) async {
     try {
-      _controller?.stop();
-      _controller?.dispose();
+      await controller.stop();
+      await controller.dispose();
     } catch (_) {}
-    _controller = null;
   }
 }
