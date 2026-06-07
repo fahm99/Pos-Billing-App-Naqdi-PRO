@@ -175,12 +175,35 @@ The APKs will be available in `build/app/outputs/flutter-apk/`
 
 ---
 
-## 📸 Screenshots
-
 <p align="center">
-  <img src="assets/screens/home.jpg" alt="Home Screen" width="300">
+  <img src="assets/naqdi%20screens/Screenshot_٢٠٢٦٠٥٢٥_١٦٤٦٢٧٠٨٦_نقدي.jpg" alt="نقدي 1" width="300">
+  <img src="assets/naqdi%20screens/Screenshot_٢٠٢٦٠٥٢٥_١٦٤٨١٣٧٧٥_نقدي.jpg" alt="نقدي 2" width="300">
   <br>
-  <em>الواجهة الرئيسية - شاشة الماسح الضوئي ونظام البيع</em>
+  <img src="assets/naqdi%20screens/Screenshot_٢٠٢٦٠٥٢٥_١٦٤٨٥٠٧١٨_نقدي.jpg" alt="نقدي 3" width="300">
+  <img src="assets/naqdi%20screens/Screenshot_٢٠٢٦٠٥٢٥_١٦٥٠٤١٠١٧_نقدي.jpg" alt="نقدي 4" width="300">
+  <br>
+  <img src="assets/naqdi%20screens/Screenshot_٢٠٢٦٠٥٢٥_١٦٥٠٥٣٥٠٢_نقدي.jpg" alt="نقدي 5" width="300">
+  <img src="assets/naqdi%20screens/Screenshot_٢٠٢٦٠٥٢٥_١٦٥١٤٧٠٣٩_نقدي.jpg" alt="نقدي 6" width="300">
+  <br>
+  <img src="assets/naqdi%20screens/Screenshot_٢٠٢٦٠٥٢٥_١٦٥٢٠٥٥٥٥_نقدي.jpg" alt="نقدي 7" width="300">
+  <img src="assets/naqdi%20screens/Screenshot_٢٠٢٦٠٥٢٥_١٦٥٢٥٧٠٩٨_نقدي.jpg" alt="نقدي 8" width="300">
+  <br>
+  <img src="assets/naqdi%20screens/Screenshot_٢٠٢٦٠٥٢٥_١٦٥٣٠٧١٦٣_نقدي.jpg" alt="نقدي 9" width="300">
+  <img src="assets/naqdi%20screens/Screenshot_٢٠٢٦٠٥٢٥_١٦٥٣١٤٠٣٥_نقدي.jpg" alt="نقدي 10" width="300">
+  <br>
+  <img src="assets/naqdi%20screens/Screenshot_٢٠٢٦٠٥٢٥_١٦٥٣١٨٦٢٦_نقدي.jpg" alt="نقدي 11" width="300">
+  <img src="assets/naqdi%20screens/Screenshot_٢٠٢٦٠٥٢٥_١٦٥٣٢٢١٣٧_نقدي.jpg" alt="نقدي 12" width="300">
+  <br>
+  <img src="assets/naqdi%20screens/Screenshot_٢٠٢٦٠٥٢٥_١٦٥٣٢٥٥٣٠_نقدي.jpg" alt="نقدي 13" width="300">
+  <img src="assets/naqdi%20screens/Screenshot_٢٠٢٦٠٥٢٥_١٦٥٣٣١٢٤٣_نقدي.jpg" alt="نقدي 14" width="300">
+  <br>
+  <img src="assets/naqdi%20screens/Screenshot_٢٠٢٦٠٥٢٥_١٦٥٤٣٤٦٣٧_نقدي.jpg" alt="نقدي 15" width="300">
+  <img src="assets/naqdi%20screens/Screenshot_٢٠٢٦٠٥٢٥_١٦٥٥١٩٢٢٩_نقدي.jpg" alt="نقدي 16" width="300">
+  <br>
+  <img src="assets/naqdi%20screens/Screenshot_٢٠٢٦٠٥٢٥_١٦٥٥٤٣٧٩٢_نقدي.jpg" alt="نقدي 17" width="300">
+  <img src="assets/naqdi%20screens/Screenshot_٢٠٢٦٠٥٢٥_١٦٥٧٣٢١١٥_نقدي.jpg" alt="نقدي 18" width="300">
+  <br>
+  
 </p>
 
 ---
@@ -241,5 +264,5 @@ If you encounter any issues or have questions, please open an issue on GitHub.
 ---
 
 <p align="center">
-  Made with ❤️ using Flutter
+  Made with Fahmi Alamere using Flutter
 </p>
