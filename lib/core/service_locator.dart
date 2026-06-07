@@ -32,6 +32,10 @@ import '../../features/expenses/data/repositories/expense_repository_impl.dart';
 import '../../features/expenses/domain/repositories/expense_repository.dart';
 import '../../features/expenses/domain/usecases/expense_usecases.dart';
 import '../../features/expenses/presentation/bloc/expense_bloc.dart';
+import '../../features/zakat/data/repositories/zakat_repository_impl.dart';
+import '../../features/zakat/domain/repositories/zakat_repository.dart';
+import '../../features/zakat/domain/usecases/zakat_usecases.dart';
+import '../../features/zakat/presentation/bloc/zakat_bloc.dart';
 
 final sl = GetIt.instance;
 
@@ -141,4 +145,22 @@ Future<void> init() async {
   sl.registerLazySingleton(() => GetExpenseSummaryUseCase(sl()));
   sl.registerLazySingleton<ExpenseRepository>(
       () => ExpenseRepositoryImpl());
+
+  // ── Zakat ──────────────────────────────────────────────
+  sl.registerFactory(() => ZakatBloc(
+        calculateZakatUseCase: sl(),
+        getPaymentsUseCase: sl(),
+        addPaymentUseCase: sl(),
+        deletePaymentUseCase: sl(),
+        getTotalPaidUseCase: sl(),
+      ));
+  sl.registerLazySingleton(() => CalculateZakatUseCase(
+        salesRepository: sl(),
+        expenseRepository: sl(),
+      ));
+  sl.registerLazySingleton(() => GetZakatPaymentsUseCase(sl()));
+  sl.registerLazySingleton(() => AddZakatPaymentUseCase(sl()));
+  sl.registerLazySingleton(() => DeleteZakatPaymentUseCase(sl()));
+  sl.registerLazySingleton(() => GetZakatTotalPaidUseCase(sl()));
+  sl.registerLazySingleton<ZakatRepository>(() => ZakatRepositoryImpl());
 }

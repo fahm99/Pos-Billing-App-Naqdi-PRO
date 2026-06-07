@@ -187,10 +187,7 @@ class _SettingsPageState extends State<SettingsPage> {
         icon: Icons.volunteer_activism_outlined,
         title: 'الزكاة والدخل',
         subtitle: 'حساب الزكاة',
-        onTap: () {
-          NotificationHelper.show(context, 'سيتم إضافة الميزة قريباً');
-        },
-        isComingSoon: true,
+        onTap: () => context.push('/zakat'),
       ),
     ];
 

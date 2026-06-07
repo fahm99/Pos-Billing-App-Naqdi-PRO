@@ -7,6 +7,7 @@ import '../../features/suppliers/data/models/supplier_model.dart';
 import '../../features/inventory/data/models/stock_movement_model.dart';
 import '../../features/auth/data/models/user_model.dart';
 import '../../features/expenses/data/models/expense_model.dart';
+import '../../features/zakat/data/models/zakat_payment_model.dart';
 
 class HiveDatabase {
   static const String productBoxName = 'products';
@@ -64,7 +65,10 @@ class HiveDatabase {
     if (!Hive.isAdapterRegistered(9)) {
       Hive.registerAdapter(ExpenseModelAdapter());
     }
-    // Adapters 10, 11, 12 will be registered in their respective phases
+    if (!Hive.isAdapterRegistered(12)) {
+      Hive.registerAdapter(ZakatPaymentModelAdapter());
+    }
+    // Adapters 10, 11 will be registered in their respective phases
 
     // Open Boxes
     await Hive.openBox<ProductModel>(productBoxName);
@@ -75,6 +79,7 @@ class HiveDatabase {
     await Hive.openBox<StockMovementModel>(stockMovementBoxName);
     await Hive.openBox<UserModel>(userBoxName);
     await Hive.openBox<ExpenseModel>(expenseBoxName);
+    await Hive.openBox<ZakatPaymentModel>(zakatPaymentBoxName);
     // Boxes for new features will be opened in their respective phases
     await Hive.openBox(settingsBoxName);
   }
@@ -93,5 +98,7 @@ class HiveDatabase {
   static Box<UserModel> get userBox => Hive.box<UserModel>(userBoxName);
   static Box<ExpenseModel> get expenseBox =>
       Hive.box<ExpenseModel>(expenseBoxName);
+  static Box<ZakatPaymentModel> get zakatPaymentBox =>
+      Hive.box<ZakatPaymentModel>(zakatPaymentBoxName);
   static Box get settingsBox => Hive.box(settingsBoxName);
 }
