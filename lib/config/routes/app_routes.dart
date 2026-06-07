@@ -1,3 +1,4 @@
+import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import '../../core/presentation/splash_page.dart';
 import '../../core/presentation/main_shell.dart';
@@ -96,6 +97,38 @@ final router = GoRouter(
       path: '/customers',
       builder: (context, state) => const CustomersPage(),
     ),
+    // Expenses Management (Phase 2)
+    GoRoute(
+      path: '/expenses',
+      builder: (context, state) => const _PhasePlaceholderPage(
+        title: 'إدارة المصروفات',
+        phase: 2,
+      ),
+    ),
+    // Zakat Dashboard (Phase 3)
+    GoRoute(
+      path: '/zakat',
+      builder: (context, state) => const _PhasePlaceholderPage(
+        title: 'الزكاة',
+        phase: 3,
+      ),
+    ),
+    // Debts Management (Phase 4)
+    GoRoute(
+      path: '/debts',
+      builder: (context, state) => const _PhasePlaceholderPage(
+        title: 'إدارة الديون',
+        phase: 4,
+      ),
+    ),
+    // Unified Notifications Page (Phase 5)
+    GoRoute(
+      path: '/notifications',
+      builder: (context, state) => const _PhasePlaceholderPage(
+        title: 'الإشعارات',
+        phase: 5,
+      ),
+    ),
     // Main shell with bottom navigation
     ShellRoute(
       builder: (context, state, child) => MainShell(child: child),
@@ -152,3 +185,39 @@ final router = GoRouter(
     ),
   ],
 );
+
+/// صفحة مؤقتة تُستبدل في المراحل اللاحقة
+class _PhasePlaceholderPage extends StatelessWidget {
+  const _PhasePlaceholderPage({required this.title, required this.phase});
+  final String title;
+  final int phase;
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      appBar: AppBar(title: Text(title)),
+      body: Center(
+        child: Padding(
+          padding: const EdgeInsets.all(24),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              const Icon(Icons.handyman_outlined, size: 64, color: Colors.grey),
+              const SizedBox(height: 16),
+              Text(
+                title,
+                style: const TextStyle(fontSize: 22, fontWeight: FontWeight.bold),
+              ),
+              const SizedBox(height: 8),
+              Text(
+                'سيتم تنفيذ هذه الميزة في المرحلة $phase',
+                textAlign: TextAlign.center,
+                style: const TextStyle(color: Colors.grey),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+}

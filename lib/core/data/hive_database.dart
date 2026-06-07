@@ -16,18 +16,26 @@ class HiveDatabase {
   static const String supplierBoxName = 'suppliers';
   static const String stockMovementBoxName = 'stock_movements';
   static const String userBoxName = 'users';
+  static const String expenseBoxName = 'expenses';
+  static const String debtBoxName = 'debts';
+  static const String zakatPaymentBoxName = 'zakat_payments';
 
   static Future<void> init() async {
     await Hive.initFlutter();
 
     // Register Adapters (only if not already registered)
-    // typeId: 0 = ProductModel
-    // typeId: 1 = ShopModel
-    // typeId: 2 = InvoiceModel
-    // typeId: 3 = CustomerModel
-    // typeId: 4 = SupplierModel
-    // typeId: 6 = InvoiceItemModel
-    // typeId: 7 = StockMovementModel
+    // typeId: 0  = ProductModel
+    // typeId: 1  = ShopModel
+    // typeId: 2  = InvoiceModel
+    // typeId: 3  = CustomerModel
+    // typeId: 4  = SupplierModel
+    // typeId: 6  = InvoiceItemModel
+    // typeId: 7  = StockMovementModel
+    // typeId: 8  = UserModel
+    // typeId: 9  = ExpenseModel       (Phase 2)
+    // typeId: 10 = DebtModel          (Phase 4)
+    // typeId: 11 = DebtPaymentModel   (Phase 4)
+    // typeId: 12 = ZakatPaymentModel  (Phase 3)
     if (!Hive.isAdapterRegistered(0)) {
       Hive.registerAdapter(ProductModelAdapter());
     }
@@ -52,6 +60,7 @@ class HiveDatabase {
     if (!Hive.isAdapterRegistered(8)) {
       Hive.registerAdapter(UserModelAdapter());
     }
+    // Adapters 9, 10, 11, 12 will be registered in their respective phases
 
     // Open Boxes
     await Hive.openBox<ProductModel>(productBoxName);
@@ -61,6 +70,7 @@ class HiveDatabase {
     await Hive.openBox<SupplierModel>(supplierBoxName);
     await Hive.openBox<StockMovementModel>(stockMovementBoxName);
     await Hive.openBox<UserModel>(userBoxName);
+    // Boxes for new features will be opened in their respective phases
     await Hive.openBox(settingsBoxName);
   }
 
