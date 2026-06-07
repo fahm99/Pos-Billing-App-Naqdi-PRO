@@ -264,5 +264,5 @@ If you encounter any issues or have questions, please open an issue on GitHub.
 ---
 
 <p align="center">
-  Made with ❤️ using Flutter
+  Made with Fahmi Alamere using Flutter
 </p>
