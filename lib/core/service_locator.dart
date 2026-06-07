@@ -36,6 +36,10 @@ import '../../features/zakat/data/repositories/zakat_repository_impl.dart';
 import '../../features/zakat/domain/repositories/zakat_repository.dart';
 import '../../features/zakat/domain/usecases/zakat_usecases.dart';
 import '../../features/zakat/presentation/bloc/zakat_bloc.dart';
+import '../../features/debts/data/repositories/debt_repository_impl.dart';
+import '../../features/debts/domain/repositories/debt_repository.dart';
+import '../../features/debts/domain/usecases/debt_usecases.dart';
+import '../../features/debts/presentation/bloc/debt_bloc.dart';
 
 final sl = GetIt.instance;
 
@@ -163,4 +167,28 @@ Future<void> init() async {
   sl.registerLazySingleton(() => DeleteZakatPaymentUseCase(sl()));
   sl.registerLazySingleton(() => GetZakatTotalPaidUseCase(sl()));
   sl.registerLazySingleton<ZakatRepository>(() => ZakatRepositoryImpl());
+
+  // ── Debts ──────────────────────────────────────────────
+  sl.registerFactory(() => DebtBloc(
+        getDebtsUseCase: sl(),
+        addDebtUseCase: sl(),
+        updateDebtUseCase: sl(),
+        deleteDebtUseCase: sl(),
+        getDebtByIdUseCase: sl(),
+        getPaymentsUseCase: sl(),
+        addPaymentUseCase: sl(),
+        deletePaymentUseCase: sl(),
+        getTotalOutstandingUseCase: sl(),
+      ));
+  sl.registerLazySingleton(() => GetDebtsUseCase(sl()));
+  sl.registerLazySingleton(() => GetDebtByIdUseCase(sl()));
+  sl.registerLazySingleton(() => AddDebtUseCase(sl()));
+  sl.registerLazySingleton(() => UpdateDebtUseCase(sl()));
+  sl.registerLazySingleton(() => DeleteDebtUseCase(sl()));
+  sl.registerLazySingleton(() => GetDebtsByCustomerUseCase(sl()));
+  sl.registerLazySingleton(() => GetDebtPaymentsUseCase(sl()));
+  sl.registerLazySingleton(() => AddDebtPaymentUseCase(sl()));
+  sl.registerLazySingleton(() => DeleteDebtPaymentUseCase(sl()));
+  sl.registerLazySingleton(() => GetTotalOutstandingUseCase(sl()));
+  sl.registerLazySingleton<DebtRepository>(() => DebtRepositoryImpl());
 }

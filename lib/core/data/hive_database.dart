@@ -8,6 +8,8 @@ import '../../features/inventory/data/models/stock_movement_model.dart';
 import '../../features/auth/data/models/user_model.dart';
 import '../../features/expenses/data/models/expense_model.dart';
 import '../../features/zakat/data/models/zakat_payment_model.dart';
+import '../../features/debts/data/models/debt_model.dart';
+import '../../features/debts/data/models/debt_payment_model.dart';
 
 class HiveDatabase {
   static const String productBoxName = 'products';
@@ -20,6 +22,7 @@ class HiveDatabase {
   static const String userBoxName = 'users';
   static const String expenseBoxName = 'expenses';
   static const String debtBoxName = 'debts';
+  static const String debtPaymentBoxName = 'debt_payments';
   static const String zakatPaymentBoxName = 'zakat_payments';
 
   static Future<void> init() async {
@@ -68,7 +71,13 @@ class HiveDatabase {
     if (!Hive.isAdapterRegistered(12)) {
       Hive.registerAdapter(ZakatPaymentModelAdapter());
     }
-    // Adapters 10, 11 will be registered in their respective phases
+    if (!Hive.isAdapterRegistered(10)) {
+      Hive.registerAdapter(DebtModelAdapter());
+    }
+    if (!Hive.isAdapterRegistered(11)) {
+      Hive.registerAdapter(DebtPaymentModelAdapter());
+    }
+    // Adapters for future phases
 
     // Open Boxes
     await Hive.openBox<ProductModel>(productBoxName);
@@ -80,6 +89,8 @@ class HiveDatabase {
     await Hive.openBox<UserModel>(userBoxName);
     await Hive.openBox<ExpenseModel>(expenseBoxName);
     await Hive.openBox<ZakatPaymentModel>(zakatPaymentBoxName);
+    await Hive.openBox<DebtModel>(debtBoxName);
+    await Hive.openBox<DebtPaymentModel>(debtPaymentBoxName);
     // Boxes for new features will be opened in their respective phases
     await Hive.openBox(settingsBoxName);
   }
@@ -100,5 +111,9 @@ class HiveDatabase {
       Hive.box<ExpenseModel>(expenseBoxName);
   static Box<ZakatPaymentModel> get zakatPaymentBox =>
       Hive.box<ZakatPaymentModel>(zakatPaymentBoxName);
+  static Box<DebtModel> get debtBox =>
+      Hive.box<DebtModel>(debtBoxName);
+  static Box<DebtPaymentModel> get debtPaymentBox =>
+      Hive.box<DebtPaymentModel>(debtPaymentBoxName);
   static Box get settingsBox => Hive.box(settingsBoxName);
 }

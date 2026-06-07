@@ -27,6 +27,8 @@ import '../../features/setup/presentation/pages/setup_page.dart';
 import '../../features/customers/presentation/pages/customers_page.dart';
 import '../../features/expenses/presentation/pages/expenses_page.dart';
 import '../../features/zakat/presentation/pages/zakat_dashboard_page.dart';
+import '../../features/debts/presentation/pages/debts_page.dart';
+import '../../features/debts/presentation/pages/debt_detail_page.dart';
 
 final router = GoRouter(
   initialLocation: '/splash',
@@ -112,10 +114,14 @@ final router = GoRouter(
     // Debts Management (Phase 4)
     GoRoute(
       path: '/debts',
-      builder: (context, state) => const _PhasePlaceholderPage(
-        title: 'إدارة الديون',
-        phase: 4,
-      ),
+      builder: (context, state) => const DebtsPage(),
+    ),
+    GoRoute(
+      path: '/debt-detail',
+      builder: (context, state) {
+        final debt = state.extra as dynamic;
+        return DebtDetailPage(debt: debt);
+      },
     ),
     // Unified Notifications Page (Phase 5)
     GoRoute(

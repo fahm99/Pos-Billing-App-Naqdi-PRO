@@ -3,7 +3,6 @@ import 'package:go_router/go_router.dart';
 
 import '../../../../core/theme/app_theme.dart';
 import '../../../../core/data/app_settings.dart';
-import '../../../../core/utils/notification_helper.dart';
 
 /// SettingsPage - صفحة الإعدادات
 /// التعديل: إضافة وضع الفتح الافتراضي وزر النسخ الاحتياطي وإدارة الديون والمصروفات والزكاة
@@ -172,10 +171,7 @@ class _SettingsPageState extends State<SettingsPage> {
         icon: Icons.account_balance_wallet_outlined,
         title: 'إدارة الديون',
         subtitle: 'إدارة ديون العملاء',
-        onTap: () {
-          NotificationHelper.show(context, 'سيتم إضافة الميزة قريباً');
-        },
-        isComingSoon: true,
+        onTap: () => context.push('/debts'),
       ),
       _ManagementItem(
         icon: Icons.receipt_long_outlined,
