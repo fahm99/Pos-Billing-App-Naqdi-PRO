@@ -1,10 +1,15 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
 import 'package:intl/intl.dart';
+import 'package:pdf/pdf.dart';
+import 'package:pdf/widgets.dart' as pw;
+import 'package:printing/printing.dart';
 import '../../../../core/theme/app_theme.dart';
 import '../../../../core/utils/currency_helper.dart';
 import '../../../shop/presentation/bloc/shop_bloc.dart';
+import '../../../shop/domain/entities/shop.dart';
 import '../../../expenses/presentation/bloc/expense_bloc.dart';
 import '../../domain/entities/invoice.dart';
 import '../bloc/sales_bloc.dart';
@@ -315,6 +320,23 @@ class _SalesHistoryPageState extends State<SalesHistoryPage>
       padding: const EdgeInsets.all(16),
       child: Column(
         children: [
+          SizedBox(
+            width: double.infinity,
+            child: ElevatedButton.icon(
+              onPressed: () => _exportReportsPdf(state),
+              icon: const Icon(Icons.picture_as_pdf, size: 20),
+              label: const Text('تصدير التقرير PDF',
+                  style: TextStyle(fontWeight: FontWeight.bold)),
+              style: ElevatedButton.styleFrom(
+                backgroundColor: AppTheme.primaryColor,
+                foregroundColor: Colors.white,
+                padding: const EdgeInsets.symmetric(vertical: 14),
+                shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(12)),
+              ),
+            ),
+          ),
+          const SizedBox(height: 16),
           _buildReportSection('اليوم', todayInvoices.length, todayRevenue,
               todayProfit, todayExpenses),
           const SizedBox(height: 16),
@@ -328,6 +350,182 @@ class _SalesHistoryPageState extends State<SalesHistoryPage>
         ],
       ),
     );
+  }
+
+  Future<void> _exportReportsPdf(SalesState state) async {
+    try {
+      final shopState = context.read<ShopBloc>().state;
+      final shop = shopState is ShopLoaded ? shopState.shop : Shop();
+      final cs = shop.currencySymbol.isNotEmpty ? shop.currencySymbol : 'ر.س';
+
+      final now = DateTime.now();
+      final todayInvoices = state.invoices.where((i) =>
+          i.date.year == now.year && i.date.month == now.month && i.date.day == now.day).toList();
+      final monthInvoices = state.invoices.where((i) =>
+          i.date.year == now.year && i.date.month == now.month).toList();
+
+      final todayRevenue = todayInvoices.fold(0.0, (s, i) => s + i.totalAmount);
+      final monthRevenue = monthInvoices.fold(0.0, (s, i) => s + i.totalAmount);
+      final todayProfit = todayInvoices.fold(0.0, (s, i) => s + i.totalProfit);
+      final monthProfit = monthInvoices.fold(0.0, (s, i) => s + i.totalProfit);
+
+      final expenseState = context.read<ExpenseBloc>().state;
+      final allExp = expenseState.expenses;
+      final todayExp = allExp.where((e) =>
+          e.date.year == now.year && e.date.month == now.month && e.date.day == now.day)
+          .fold<double>(0, (s, e) => s + e.amount);
+      final monthExp = allExp.where((e) =>
+          e.date.year == now.year && e.date.month == now.month)
+          .fold<double>(0, (s, e) => s + e.amount);
+      final totalExp = allExp.fold<double>(0, (s, e) => s + e.amount);
+
+      final arabicFont = pw.Font.ttf(
+        await rootBundle.load('assets/fonts/cairo-font.ttf'),
+      );
+
+      final base = pw.TextStyle(font: arabicFont, fontSize: 11);
+      final bold = pw.TextStyle(font: arabicFont, fontSize: 11, fontWeight: pw.FontWeight.bold);
+      final titleStyle = pw.TextStyle(font: arabicFont, fontSize: 22, fontWeight: pw.FontWeight.bold);
+      final sectionTitle = pw.TextStyle(font: arabicFont, fontSize: 14, fontWeight: pw.FontWeight.bold);
+
+      final doc = pw.Document();
+
+      doc.addPage(
+        pw.Page(
+          pageFormat: PdfPageFormat.a4,
+          textDirection: pw.TextDirection.rtl,
+          build: (pw.Context ctx) {
+            return pw.Column(
+              crossAxisAlignment: pw.CrossAxisAlignment.stretch,
+              children: [
+                pw.Center(child: pw.Text('تقرير المبيعات والمصروفات', style: titleStyle)),
+                pw.SizedBox(height: 4),
+                pw.Center(child: pw.Text(
+                  shop.name.isNotEmpty ? shop.name : '',
+                  style: pw.TextStyle(font: arabicFont, fontSize: 14, color: PdfColors.grey),
+                )),
+                pw.SizedBox(height: 4),
+                pw.Center(child: pw.Text(
+                  'تاريخ التقرير: ${DateFormat('dd/MM/yyyy HH:mm').format(now)}',
+                  style: pw.TextStyle(font: arabicFont, fontSize: 10, color: PdfColors.grey),
+                )),
+                pw.SizedBox(height: 16),
+                pw.Divider(thickness: 1.5),
+                pw.SizedBox(height: 12),
+
+                _pdfReportSection('اليوم', todayInvoices.length, todayRevenue, todayProfit, todayExp, cs, base, bold, sectionTitle),
+                pw.SizedBox(height: 20),
+                _pdfReportSection('هذا الشهر', monthInvoices.length, monthRevenue, monthProfit, monthExp, cs, base, bold, sectionTitle),
+                pw.SizedBox(height: 20),
+                _pdfReportSection('الإجمالي', state.invoiceCount, state.totalRevenue, state.totalProfit, totalExp, cs, base, bold, sectionTitle),
+
+                pw.SizedBox(height: 20),
+                pw.Divider(thickness: 1.5),
+                pw.SizedBox(height: 10),
+                pw.Text('أكثر المنتجات مبيعاً', style: sectionTitle),
+                pw.SizedBox(height: 8),
+                ..._pdfTopProducts(state.invoices, arabicFont, cs),
+              ],
+            );
+          },
+        ),
+      );
+
+      await Printing.sharePdf(
+        bytes: await doc.save(),
+        filename: 'تقرير_المبيعات_${DateFormat('yyyy-MM-dd').format(now)}.pdf',
+      );
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('فشل تصدير التقرير: $e'), backgroundColor: Colors.red),
+        );
+      }
+    }
+  }
+
+  pw.Widget _pdfReportSection(String title, int count, double revenue, double profit, double expenses,
+      String cs, pw.TextStyle base, pw.TextStyle bold, pw.TextStyle sectionTitle) {
+    return pw.Column(
+      crossAxisAlignment: pw.CrossAxisAlignment.start,
+      children: [
+        pw.Text(title, style: sectionTitle),
+        pw.SizedBox(height: 8),
+        pw.Row(
+          mainAxisAlignment: pw.MainAxisAlignment.spaceBetween,
+          children: [
+            _pdfStatItem('الفواتير', '$count', base, bold),
+            _pdfStatItem('الإيرادات', '$cs ${revenue.toStringAsFixed(0)}', base, bold),
+            _pdfStatItem('الأرباح', '$cs ${profit.toStringAsFixed(0)}', base, bold),
+            _pdfStatItem('المصروفات', '$cs ${expenses.toStringAsFixed(0)}', base, bold),
+          ],
+        ),
+      ],
+    );
+  }
+
+  pw.Widget _pdfStatItem(String label, String value, pw.TextStyle base, pw.TextStyle bold) {
+    return pw.Container(
+      padding: const pw.EdgeInsets.all(8),
+      decoration: pw.BoxDecoration(
+        border: pw.Border.all(color: PdfColors.grey300),
+        borderRadius: const pw.BorderRadius.all(pw.Radius.circular(6)),
+      ),
+      child: pw.Column(
+        children: [
+          pw.Text(value, style: bold),
+          pw.SizedBox(height: 2),
+          pw.Text(label, style: base),
+        ],
+      ),
+    );
+  }
+
+  List<pw.Widget> _pdfTopProducts(List<Invoice> invoices, pw.Font font, String cs) {
+    final Map<String, double> productSales = {};
+    for (final inv in invoices) {
+      for (final item in inv.items) {
+        productSales[item.productName] = (productSales[item.productName] ?? 0) + item.subtotal;
+      }
+    }
+    final sorted = productSales.entries.toList()..sort((a, b) => b.value.compareTo(a.value));
+    final top = sorted.take(5).toList();
+
+    if (top.isEmpty) {
+      return [pw.Text('لا توجد منتجات', style: pw.TextStyle(font: font, fontSize: 11))];
+    }
+
+    return top.asMap().entries.map((e) {
+      final rank = e.key + 1;
+      final entry = e.value;
+      return pw.Padding(
+        padding: const pw.EdgeInsets.symmetric(vertical: 4),
+        child: pw.Row(
+          mainAxisAlignment: pw.MainAxisAlignment.spaceBetween,
+          children: [
+            pw.Row(
+              children: [
+                pw.Container(
+                  width: 24, height: 24,
+                  decoration: pw.BoxDecoration(
+                    color: PdfColor.fromInt(0xFF00A77E),
+                    shape: pw.BoxShape.circle,
+                  ),
+                  child: pw.Center(
+                    child: pw.Text('$rank',
+                        style: pw.TextStyle(font: font, fontSize: 10, color: PdfColors.white)),
+                  ),
+                ),
+                pw.SizedBox(width: 8),
+                pw.Text(entry.key, style: pw.TextStyle(font: font, fontSize: 11)),
+              ],
+            ),
+            pw.Text('$cs ${entry.value.toStringAsFixed(0)}',
+                style: pw.TextStyle(font: font, fontSize: 11, fontWeight: pw.FontWeight.bold)),
+          ],
+        ),
+      );
+    }).toList();
   }
 
   Widget _buildReportSection(String title, int count, double revenue,
@@ -353,30 +551,13 @@ class _SalesHistoryPageState extends State<SalesHistoryPage>
           const SizedBox(height: 12),
           Row(
             children: [
-              Expanded(
-                  child: _buildStatCard(
-                      'الفواتير', '$count', Icons.receipt_long, Colors.blue)),
+              Expanded(child: _buildStatCard('الفواتير', '$count', Icons.receipt_long)),
               const SizedBox(width: 6),
-              Expanded(
-                  child: _buildStatCard(
-                      'الإيرادات',
-                      '$currency${revenue.toStringAsFixed(0)}',
-                      Icons.attach_money,
-                      AppTheme.primaryColor)),
+              Expanded(child: _buildStatCard('الإيرادات', '$currency${revenue.toStringAsFixed(0)}', Icons.attach_money)),
               const SizedBox(width: 6),
-              Expanded(
-                  child: _buildStatCard(
-                      'الأرباح',
-                      '$currency${profit.toStringAsFixed(0)}',
-                      Icons.trending_up,
-                      Colors.orange)),
+              Expanded(child: _buildStatCard('الأرباح', '$currency${profit.toStringAsFixed(0)}', Icons.trending_up)),
               const SizedBox(width: 6),
-              Expanded(
-                  child: _buildStatCard(
-                      'المصروفات',
-                      '$currency${expenses.toStringAsFixed(0)}',
-                      Icons.money_off,
-                      Colors.red)),
+              Expanded(child: _buildStatCard('المصروفات', '$currency${expenses.toStringAsFixed(0)}', Icons.money_off)),
             ],
           ),
         ],
@@ -384,21 +565,20 @@ class _SalesHistoryPageState extends State<SalesHistoryPage>
     );
   }
 
-  Widget _buildStatCard(
-      String label, String value, IconData icon, Color color) {
+  Widget _buildStatCard(String label, String value, IconData icon) {
     return Container(
       padding: const EdgeInsets.all(12),
       decoration: BoxDecoration(
-        color: color.withOpacity(0.08),
+        color: AppTheme.primaryColor.withOpacity(0.08),
         borderRadius: BorderRadius.circular(12),
       ),
       child: Column(
         children: [
-          Icon(icon, color: color, size: 22),
+          Icon(icon, color: AppTheme.primaryColor, size: 22),
           const SizedBox(height: 6),
           Text(value,
               style: TextStyle(
-                  fontWeight: FontWeight.bold, fontSize: 14, color: color)),
+                  fontWeight: FontWeight.bold, fontSize: 14, color: AppTheme.primaryColor)),
           const SizedBox(height: 2),
           Text(label, style: TextStyle(fontSize: 10, color: Colors.grey[600])),
         ],
