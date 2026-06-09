@@ -1,8 +1,8 @@
 import 'dart:io';
-import 'dart:typed_data';
 import 'dart:ui' as ui;
 
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter/rendering.dart';
 import 'package:go_router/go_router.dart';
@@ -429,154 +429,252 @@ class _InvoiceDetailPageState extends State<InvoiceDetailPage> {
   }
 
   Future<Uint8List> _generateInvoicePdf(Shop shop) async {
+    final arabicFont = pw.Font.ttf(
+      await rootBundle.load('assets/fonts/cairo-font.ttf'),
+    );
+
+    final baseStyle = pw.TextStyle(font: arabicFont, fontSize: 12);
+    final boldStyle = pw.TextStyle(
+        font: arabicFont, fontSize: 12, fontWeight: pw.FontWeight.bold);
+    final titleStyle = pw.TextStyle(
+        font: arabicFont,
+        fontSize: 22,
+        fontWeight: pw.FontWeight.bold,
+        decoration: pw.TextDecoration.underline);
+    final storeNameStyle = pw.TextStyle(
+        font: arabicFont, fontSize: 28, fontWeight: pw.FontWeight.bold);
+    final headerCellStyle = pw.TextStyle(
+        font: arabicFont,
+        fontSize: 12,
+        fontWeight: pw.FontWeight.bold,
+        color: PdfColors.black);
+    final cellStyle = pw.TextStyle(font: arabicFont, fontSize: 12);
+
+    final cs = shop.currencySymbol.isNotEmpty ? shop.currencySymbol : 'ر.س';
+
+    final subtotal = invoice.subtotal;
+    final taxAmount = invoice.taxAmount;
+    final taxRate =
+        subtotal > 0 && taxAmount > 0 ? taxAmount / subtotal : 0.0;
+
     final doc = pw.Document();
 
-    pw.Font? arabicFont;
-    pw.Font? arabicBold;
-    try {
-      arabicFont = await PdfGoogleFonts.cairoRegular();
-      arabicBold = await PdfGoogleFonts.cairoBold();
-    } catch (_) {
-      try {
-        arabicFont = await PdfGoogleFonts.tajawalRegular();
-        arabicBold = await PdfGoogleFonts.tajawalBold();
-      } catch (_) {
-        try {
-          arabicFont = await PdfGoogleFonts.notoNaskhArabicRegular();
-          arabicBold = await PdfGoogleFonts.notoNaskhArabicBold();
-        } catch (_) {}
-      }
-    }
-
-    final theme = pw.ThemeData.withFont(
-      base: arabicFont ?? pw.Font.helvetica(),
-      bold: arabicBold ?? pw.Font.helveticaBold(),
-    );
-
-    final currencySymbol = shop.currencySymbol.isNotEmpty ? shop.currencySymbol : 'ر.س';
-
     doc.addPage(
-      pw.MultiPage(
-        theme: theme,
+      pw.Page(
         pageFormat: PdfPageFormat.a4,
-        margin: const pw.EdgeInsets.all(32),
         textDirection: pw.TextDirection.rtl,
-        build: (context) => [
-          pw.Row(
-            mainAxisAlignment: pw.MainAxisAlignment.spaceBetween,
-            children: [
-              pw.Column(
-                crossAxisAlignment: pw.CrossAxisAlignment.start,
-                children: [
-                  pw.Text(shop.name,
-                      style: pw.TextStyle(fontSize: 22, fontWeight: pw.FontWeight.bold, font: arabicBold)),
-                  if (shop.addressLine1.isNotEmpty)
-                    pw.Text(shop.addressLine1, style: pw.TextStyle(fontSize: 10, font: arabicFont)),
-                  if (shop.addressLine2.isNotEmpty)
-                    pw.Text(shop.addressLine2, style: pw.TextStyle(fontSize: 10, font: arabicFont)),
-                  if (shop.phoneNumber.isNotEmpty)
-                    pw.Text('الهاتف: ${shop.phoneNumber}', style: pw.TextStyle(fontSize: 10, font: arabicFont)),
-                  if (shop.taxNumber.isNotEmpty)
-                    pw.Text('الرقم الضريبي: ${shop.taxNumber}', style: pw.TextStyle(fontSize: 10, font: arabicFont)),
-                ],
-              ),
-              pw.Column(
-                crossAxisAlignment: pw.CrossAxisAlignment.end,
-                children: [
-                  pw.Text('رقم الفاتورة: ${invoice.invoiceNumber}',
-                      style: pw.TextStyle(fontSize: 12, fontWeight: pw.FontWeight.bold, font: arabicBold)),
-                  pw.Text('التاريخ: ${DateFormat('dd/MM/yyyy HH:mm').format(invoice.date)}',
-                      style: pw.TextStyle(fontSize: 10, font: arabicFont)),
-                ],
-              ),
-            ],
-          ),
-          pw.SizedBox(height: 20),
-          pw.Divider(),
-          pw.SizedBox(height: 12),
-          pw.TableHelper.fromTextArray(
-            headerStyle: pw.TextStyle(fontWeight: pw.FontWeight.bold, fontSize: 11, font: arabicBold),
-            headerAlignment: pw.Alignment.center,
-            cellAlignment: pw.Alignment.centerRight,
-            cellStyle: pw.TextStyle(font: arabicFont),
-            headers: ['الإجمالي', 'الكمية', 'السعر', 'المنتج', '#'],
-            data: List.generate(
-              invoice.items.length,
-              (i) => [
-                '${i + 1}',
-                '${invoice.items[i].quantity}',
-                '$currencySymbol${invoice.items[i].price.toStringAsFixed(2)}',
-                invoice.items[i].productName,
-                '$currencySymbol${invoice.items[i].subtotal.toStringAsFixed(2)}',
+        build: (pw.Context context) {
+          return pw.Container(
+            margin: const pw.EdgeInsets.all(20),
+            padding: const pw.EdgeInsets.all(25),
+            decoration: pw.BoxDecoration(
+              border: pw.Border.all(color: PdfColors.black, width: 2),
+              color: PdfColors.white,
+            ),
+            child: pw.Column(
+              crossAxisAlignment: pw.CrossAxisAlignment.stretch,
+              children: [
+                pw.Center(
+                  child: pw.Text(
+                    shop.name.isNotEmpty ? shop.name : 'متجر النخبة التجاري',
+                    style: storeNameStyle,
+                  ),
+                ),
+                pw.SizedBox(height: 5),
+                pw.Center(
+                  child: pw.Text(
+                    '${shop.addressLine1.isNotEmpty ? shop.addressLine1 : 'الرياض'}\n'
+                    '${shop.phoneNumber.isNotEmpty ? 'هاتف: ${shop.phoneNumber}' : ''}'
+                    '${shop.taxNumber.isNotEmpty ? ' | الرقم الضريبي: ${shop.taxNumber}' : ''}',
+                    style: baseStyle,
+                    textAlign: pw.TextAlign.center,
+                  ),
+                ),
+                pw.SizedBox(height: 15),
+                pw.Center(
+                  child: pw.Text('فاتورة ضريبية مبسطة', style: titleStyle),
+                ),
+                pw.SizedBox(height: 15),
+                pw.Divider(color: PdfColors.black, thickness: 2),
+
+                pw.SizedBox(height: 15),
+                pw.Row(
+                  children: [
+                    pw.Expanded(
+                      child: pw.Column(
+                        crossAxisAlignment: pw.CrossAxisAlignment.start,
+                        children: [
+                          _pdfInfoLine('رقم الفاتورة: ', invoice.invoiceNumber,
+                              boldStyle, baseStyle),
+                          _pdfInfoLine(
+                              'التاريخ: ',
+                              DateFormat('dd/MM/yyyy').format(invoice.date),
+                              boldStyle,
+                              baseStyle),
+                          _pdfInfoLine(
+                              'الوقت: ',
+                              DateFormat('HH:mm').format(invoice.date),
+                              boldStyle,
+                              baseStyle),
+                        ],
+                      ),
+                    ),
+                    pw.Expanded(
+                      child: pw.Column(
+                        crossAxisAlignment: pw.CrossAxisAlignment.start,
+                        children: [
+                          _pdfInfoLine('العميل: ',
+                              invoice.customerName ?? 'عميل نقدي',
+                              boldStyle, baseStyle),
+                          _pdfInfoLine(
+                              'طريقة الدفع: ',
+                              _paymentLabel(invoice.paymentMethod),
+                              boldStyle,
+                              baseStyle),
+                        ],
+                      ),
+                    ),
+                  ],
+                ),
+                pw.SizedBox(height: 15),
+
+                pw.Table(
+                  border: pw.TableBorder.all(
+                      color: PdfColors.black, width: 1.5),
+                  children: [
+                    pw.TableRow(
+                      decoration: const pw.BoxDecoration(
+                          color: PdfColor.fromInt(0xFFF0F0F0)),
+                      children: [
+                        '#',
+                        'المنتج / الخدمة',
+                        'الكمية',
+                        'سعر الوحدة ($cs)',
+                        'الإجمالي ($cs)',
+                      ].map((e) => pw.Padding(
+                            padding: const pw.EdgeInsets.all(8),
+                            child: pw.Text(e,
+                                style: headerCellStyle,
+                                textAlign: pw.TextAlign.center),
+                          )).toList(),
+                    ),
+                    ...invoice.items.asMap().entries.map((entry) {
+                      final index = entry.key + 1;
+                      final item = entry.value;
+                      final lineTotal = item.price * item.quantity;
+                      return pw.TableRow(
+                        children: [
+                          _pdfCell(index.toString(), cellStyle),
+                          _pdfCell(item.productName, cellStyle),
+                          _pdfCell(item.quantity.toString(), cellStyle),
+                          _pdfCell(item.price.toStringAsFixed(2), cellStyle),
+                          _pdfCell(lineTotal.toStringAsFixed(2), cellStyle),
+                        ],
+                      );
+                    }),
+                  ],
+                ),
+
+                pw.SizedBox(height: 15),
+
+                pw.Align(
+                  alignment: pw.Alignment.centerRight,
+                  child: pw.Container(
+                    width: 250,
+                    decoration: pw.BoxDecoration(
+                      border: pw.Border.all(
+                          color: PdfColors.black, width: 1.5),
+                    ),
+                    child: pw.Column(
+                      children: [
+                        _buildTotalRow('الإجمالي قبل الضريبة',
+                            '$cs ${subtotal.toStringAsFixed(2)}',
+                            boldStyle, baseStyle),
+                        _buildTotalRow(
+                            'ضريبة القيمة المضافة (${(taxRate * 100).toStringAsFixed(0)}%)',
+                            '$cs ${taxAmount.toStringAsFixed(2)}',
+                            boldStyle, baseStyle),
+                        pw.Divider(
+                            height: 1, color: PdfColors.black),
+                        _buildTotalRow('المبلغ الإجمالي',
+                            '$cs ${invoice.totalAmount.toStringAsFixed(2)}',
+                            boldStyle,
+                            baseStyle.copyWith(
+                                fontWeight: pw.FontWeight.bold,
+                                fontSize: 14)),
+                      ],
+                    ),
+                  ),
+                ),
+
+                pw.SizedBox(height: 25),
+                pw.Divider(color: PdfColors.black, thickness: 2),
+                pw.SizedBox(height: 10),
+                pw.Center(
+                  child: pw.Column(
+                    children: [
+                      pw.Text(
+                          shop.footerText.isNotEmpty
+                              ? shop.footerText
+                              : 'شكراً لزيارتكم ... نتمنى لكم يوماً سعيداً',
+                          style: baseStyle),
+                      pw.Text(
+                          'يمكنكم استبدال أو إرجاع المنتجات خلال 3 أيام مع إحضار الفاتورة',
+                          style: baseStyle),
+                      pw.SizedBox(height: 8),
+                      pw.Text('تم إصدار هذه الفاتورة بواسطة نظام نقاط البيع (نقدي)',
+                          style: baseStyle.copyWith(fontSize: 10)),
+                    ],
+                  ),
+                ),
               ],
             ),
-          ),
-          pw.SizedBox(height: 20),
-          pw.Divider(),
-          pw.SizedBox(height: 10),
-          pw.Column(
-            crossAxisAlignment: pw.CrossAxisAlignment.end,
-            children: [
-              _buildPdfRow('المجموع الفرعي', '$currencySymbol${invoice.subtotal.toStringAsFixed(2)}', arabicFont),
-              if (invoice.discountAmount > 0)
-                _buildPdfRow('الخصم', '-$currencySymbol${invoice.discountAmount.toStringAsFixed(2)}', arabicFont),
-              if (invoice.taxAmount > 0)
-                _buildPdfRow('الضريبة', '$currencySymbol${invoice.taxAmount.toStringAsFixed(2)}', arabicFont),
-              _buildPdfRow('الإجمالي', '$currencySymbol${invoice.totalAmount.toStringAsFixed(2)}', arabicFont,
-                  isBold: true, boldFont: arabicBold),
-            ],
-          ),
-          pw.SizedBox(height: 20),
-          pw.Divider(),
-          pw.SizedBox(height: 10),
-          pw.Column(
-            crossAxisAlignment: pw.CrossAxisAlignment.start,
-            children: [
-              pw.Text('طريقة الدفع: ${_paymentLabel(invoice.paymentMethod)}',
-                  style: pw.TextStyle(fontSize: 11, font: arabicFont)),
-              if (invoice.cashPaid > 0)
-                pw.Text('المبلغ النقدي: $currencySymbol${invoice.cashPaid.toStringAsFixed(2)}',
-                    style: pw.TextStyle(fontSize: 11, font: arabicFont)),
-              if (invoice.changeAmount > 0)
-                pw.Text('الباقي: $currencySymbol${invoice.changeAmount.toStringAsFixed(2)}',
-                    style: pw.TextStyle(fontSize: 11, font: arabicFont)),
-            ],
-          ),
-          if (shop.footerText.isNotEmpty) ...[
-            pw.SizedBox(height: 30),
-            pw.Divider(),
-            pw.SizedBox(height: 10),
-            pw.Paragraph(
-                text: shop.footerText,
-                textAlign: pw.TextAlign.center,
-                style: pw.TextStyle(fontSize: 10, font: arabicFont)),
-          ],
-        ],
+          );
+        },
       ),
     );
+
     return doc.save();
   }
 
-  pw.Widget _buildPdfRow(String label, String value, pw.Font? font,
-      {bool isBold = false, pw.Font? boldFont}) {
-    return pw.Padding(
-      padding: const pw.EdgeInsets.symmetric(vertical: 3),
-      child: pw.Row(
-        mainAxisAlignment: pw.MainAxisAlignment.end,
+  pw.Widget _pdfInfoLine(String label, String value,
+      pw.TextStyle labelStyle, pw.TextStyle valueStyle) {
+    return pw.RichText(
+      text: pw.TextSpan(
+        style: valueStyle,
         children: [
+          pw.TextSpan(text: label, style: labelStyle),
+          pw.TextSpan(text: value),
+        ],
+      ),
+    );
+  }
+
+  pw.Widget _pdfCell(String text, pw.TextStyle style) {
+    return pw.Padding(
+      padding: const pw.EdgeInsets.all(8),
+      child: pw.Text(text, style: style, textAlign: pw.TextAlign.center),
+    );
+  }
+
+  pw.Widget _buildTotalRow(String label, String value,
+      pw.TextStyle labelStyle, pw.TextStyle valueStyle) {
+    return pw.Container(
+      decoration: const pw.BoxDecoration(
+        border: pw.Border(
+            bottom: pw.BorderSide(color: PdfColors.black, width: 1)),
+      ),
+      padding:
+          const pw.EdgeInsets.symmetric(vertical: 6, horizontal: 8),
+      child: pw.Row(
+        children: [
+          pw.Expanded(
+            child: pw.Text(label,
+                style: labelStyle, textAlign: pw.TextAlign.right),
+          ),
+          pw.SizedBox(width: 16),
           pw.Text(value,
-              textDirection: pw.TextDirection.rtl,
-              style: pw.TextStyle(
-                  fontWeight: isBold ? pw.FontWeight.bold : pw.FontWeight.normal,
-                  font: isBold ? boldFont ?? font : font,
-                  fontSize: isBold ? 13 : 11)),
-          pw.SizedBox(width: 20),
-          pw.Text(label,
-              textDirection: pw.TextDirection.rtl,
-              style: pw.TextStyle(
-                  fontWeight: isBold ? pw.FontWeight.bold : pw.FontWeight.normal,
-                  font: isBold ? boldFont ?? font : font,
-                  fontSize: isBold ? 13 : 11)),
+              style: valueStyle, textAlign: pw.TextAlign.center),
         ],
       ),
     );
