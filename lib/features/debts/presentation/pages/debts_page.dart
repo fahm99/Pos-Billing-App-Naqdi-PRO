@@ -137,8 +137,10 @@ class _DebtsPageState extends State<DebtsPage> {
   Widget _buildFilterChip(String label, String value) {
     final selected = _filter == value;
     return FilterChip(
-      label: Text(label),
+      label: Text(label, style: TextStyle(color: selected ? Colors.white : Colors.black87)),
       selected: selected,
+      selectedColor: Theme.of(context).primaryColor,
+      checkmarkColor: Colors.white,
       onSelected: (_) => setState(() => _filter = value),
     );
   }

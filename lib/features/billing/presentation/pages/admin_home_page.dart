@@ -698,7 +698,7 @@ class _AdminHomePageState extends State<AdminHomePage>
             ),
             const SizedBox(width: 10),
             const Text(
-              'الإدارة السريعة',
+              'الإدارة',
               style: TextStyle(
                   fontSize: 16,
                   fontWeight: FontWeight.bold,
@@ -711,10 +711,10 @@ class _AdminHomePageState extends State<AdminHomePage>
           shrinkWrap: true,
           physics: const NeverScrollableScrollPhysics(),
           gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-            crossAxisCount: 3,
-            crossAxisSpacing: 10,
-            mainAxisSpacing: 10,
-            childAspectRatio: 0.85,
+            crossAxisCount: 4,
+            crossAxisSpacing: 8,
+            mainAxisSpacing: 8,
+            childAspectRatio: 0.7,
           ),
           itemCount: _managementItems.length,
           itemBuilder: (context, index) =>
@@ -789,27 +789,27 @@ class _AdminHomePageState extends State<AdminHomePage>
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
             Container(
-              width: 48,
-              height: 48,
+              width: 40,
+              height: 40,
               decoration: BoxDecoration(
                 color: AppTheme.primaryColor.withOpacity(0.1),
-                borderRadius: BorderRadius.circular(12),
+                borderRadius: BorderRadius.circular(10),
               ),
-              child: Icon(item.icon, color: AppTheme.primaryColor, size: 24),
+              child: Icon(item.icon, color: AppTheme.primaryColor, size: 20),
             ),
-            const SizedBox(height: 8),
+            const SizedBox(height: 6),
             Text(
               item.title,
               style: const TextStyle(
                 fontWeight: FontWeight.w600,
-                fontSize: 12,
+                fontSize: 11,
               ),
               textAlign: TextAlign.center,
             ),
-            const SizedBox(height: 2),
+            const SizedBox(height: 1),
             Text(
               item.subtitle,
-              style: TextStyle(fontSize: 10, color: Colors.grey[500]),
+              style: TextStyle(fontSize: 9, color: Colors.grey[500]),
               textAlign: TextAlign.center,
               maxLines: 1,
               overflow: TextOverflow.ellipsis,
