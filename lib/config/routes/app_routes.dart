@@ -30,6 +30,8 @@ import '../../features/zakat/presentation/pages/zakat_dashboard_page.dart';
 import '../../features/debts/presentation/pages/debts_page.dart';
 import '../../features/debts/presentation/pages/debt_detail_page.dart';
 import '../../features/debts/presentation/pages/notifications_page.dart';
+import '../../features/ai/presentation/pages/ai_chat_page.dart';
+import '../../features/ai/presentation/pages/ai_settings_page.dart';
 
 final router = GoRouter(
   initialLocation: '/splash',
@@ -128,6 +130,15 @@ final router = GoRouter(
     GoRoute(
       path: '/notifications',
       builder: (context, state) => const NotificationsPage(),
+    ),
+    // AI Assistant (Phase 7)
+    GoRoute(
+      path: '/ai-chat',
+      builder: (context, state) => const AiChatPage(),
+    ),
+    GoRoute(
+      path: '/ai-settings',
+      builder: (context, state) => const AiSettingsPage(),
     ),
     // Main shell with bottom navigation
     ShellRoute(

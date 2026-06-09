@@ -5,6 +5,7 @@ import 'package:flutter/services.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
 import 'package:mobile_scanner/mobile_scanner.dart';
+
 import '../../../../core/services/scanner_service.dart';
 import '../../../../core/theme/app_theme.dart';
 import '../../../../core/utils/notification_helper.dart';
@@ -205,6 +206,11 @@ class _AdminHomePageState extends State<AdminHomePage>
       ],
       child: Scaffold(
         backgroundColor: const Color(0xFFF9FAFB),
+        floatingActionButton: FloatingActionButton(
+          onPressed: () => context.push('/ai-chat'),
+          backgroundColor: AppTheme.primaryColor,
+          child: const Icon(Icons.auto_awesome, color: Colors.white),
+        ),
         body: RefreshIndicator(
           onRefresh: () async {
             if (mounted) {
@@ -760,6 +766,12 @@ class _AdminHomePageState extends State<AdminHomePage>
           title: 'الإشعارات',
           subtitle: 'تنبيهات الديون',
           onTap: () => context.push('/notifications'),
+        ),
+        _ManagementItem(
+          icon: Icons.auto_awesome,
+          title: 'المساعد الذكي',
+          subtitle: 'AI لتحليل البيانات',
+          onTap: () => context.push('/ai-chat'),
         ),
       ];
 

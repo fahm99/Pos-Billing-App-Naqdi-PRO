@@ -10,6 +10,9 @@ import '../../features/expenses/data/models/expense_model.dart';
 import '../../features/zakat/data/models/zakat_payment_model.dart';
 import '../../features/debts/data/models/debt_model.dart';
 import '../../features/debts/data/models/debt_payment_model.dart';
+import '../../features/ai/data/models/ai_provider_model.dart';
+import '../../features/ai/data/models/chat_message_model.dart';
+import '../../features/ai/data/models/chat_session_model.dart';
 
 class HiveDatabase {
   static const String productBoxName = 'products';
@@ -77,7 +80,15 @@ class HiveDatabase {
     if (!Hive.isAdapterRegistered(11)) {
       Hive.registerAdapter(DebtPaymentModelAdapter());
     }
-    // Adapters for future phases
+    if (!Hive.isAdapterRegistered(13)) {
+      Hive.registerAdapter(AiProviderModelAdapter());
+    }
+    if (!Hive.isAdapterRegistered(14)) {
+      Hive.registerAdapter(ChatMessageModelAdapter());
+    }
+    if (!Hive.isAdapterRegistered(15)) {
+      Hive.registerAdapter(ChatSessionModelAdapter());
+    }
 
     // Open Boxes
     await Hive.openBox<ProductModel>(productBoxName);
@@ -91,9 +102,12 @@ class HiveDatabase {
     await Hive.openBox<ZakatPaymentModel>(zakatPaymentBoxName);
     await Hive.openBox<DebtModel>(debtBoxName);
     await Hive.openBox<DebtPaymentModel>(debtPaymentBoxName);
-    // Boxes for new features will be opened in their respective phases
     await Hive.openBox(settingsBoxName);
   }
+
+  static const String aiProviderBoxName = 'ai_providers';
+  static const String aiSessionBoxName = 'ai_sessions';
+  static const String aiMessageBoxName = 'ai_messages';
 
   static Box<ProductModel> get productBox =>
       Hive.box<ProductModel>(productBoxName);

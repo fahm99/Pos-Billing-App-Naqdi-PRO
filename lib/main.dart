@@ -19,6 +19,7 @@ import 'features/inventory/presentation/bloc/inventory_bloc.dart';
 import 'features/expenses/presentation/bloc/expense_bloc.dart';
 import 'features/zakat/presentation/bloc/zakat_bloc.dart';
 import 'features/debts/presentation/bloc/debt_bloc.dart';
+import 'features/ai/presentation/bloc/ai_bloc.dart';
 
 final GlobalKey<NavigatorState> navigatorKey = GlobalKey<NavigatorState>();
 
@@ -64,6 +65,8 @@ class MyApp extends StatelessWidget {
             create: (context) => di.sl<ZakatBloc>()),
         BlocProvider<DebtBloc>(
             create: (context) => di.sl<DebtBloc>()),
+        BlocProvider<AiBloc>(
+            create: (context) => di.sl<AiBloc>()),
       ],
       child: BlocListener<ShopBloc, ShopState>(
         listenWhen: (previous, current) => current is ShopLoaded,

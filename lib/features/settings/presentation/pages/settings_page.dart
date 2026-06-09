@@ -96,6 +96,13 @@ class _SettingsPageState extends State<SettingsPage> {
                   onTap: () => context.push('/backup'),
                 ),
                 _buildDivider(),
+                _buildListItem(
+                  icon: Icons.auto_awesome,
+                  title: 'المساعد الذكي',
+                  subtitle: 'الذكاء الاصطناعي لتحليل البيانات',
+                  onTap: () => context.push('/ai-settings'),
+                ),
+                _buildDivider(),
                 // وضع الفتح الافتراضي
                 _buildListItem(
                   icon: Icons.open_in_full_outlined,
