@@ -9,7 +9,6 @@ import '../../../../core/services/scanner_service.dart';
 import '../../../../core/theme/app_theme.dart';
 import '../../../../core/utils/notification_helper.dart';
 import '../../../product/presentation/bloc/product_bloc.dart';
-import '../../../product/domain/entities/product.dart';
 import '../../../sales/presentation/bloc/sales_bloc.dart';
 import '../../../sales/domain/entities/invoice.dart';
 import '../../../shop/presentation/bloc/shop_bloc.dart';
@@ -225,11 +224,8 @@ class _AdminHomePageState extends State<AdminHomePage>
                 // مراجعة الطلب button - visible when cart has items
                 _buildReviewOrderButton(),
                 const SizedBox(height: 16),
-                // Today Summary - Horizontal row
+                // Today Summary - single card
                 _buildTodaySummary(),
-                const SizedBox(height: 20),
-                // Stock Alerts Section
-                _buildStockAlertsSection(),
                 const SizedBox(height: 20),
                 // الإدارة السريعة
                 _buildQuickManagementSection(),
@@ -576,59 +572,70 @@ class _AdminHomePageState extends State<AdminHomePage>
         final todayCount = todayInvoices.length;
         final todayAvg = todayCount > 0 ? todayRevenue / todayCount : 0.0;
 
-        return Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            const Text(
-              'ملخص اليوم',
-              style: TextStyle(
-                  fontSize: 16,
-                  fontWeight: FontWeight.bold,
-                  color: Color(0xFF1A1C1E)),
-            ),
-            const SizedBox(height: 12),
-            SingleChildScrollView(
-              scrollDirection: Axis.horizontal,
-              child: Row(
+        return Container(
+          width: double.infinity,
+          padding: const EdgeInsets.all(16),
+          decoration: BoxDecoration(
+            color: Colors.white,
+            borderRadius: BorderRadius.circular(14),
+            boxShadow: [
+              BoxShadow(
+                  color: Colors.black.withOpacity(0.04),
+                  blurRadius: 8,
+                  offset: const Offset(0, 2)),
+            ],
+          ),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Row(
                 children: [
-                  _buildStatCard(
-                      'المبيعات', '$todayCount', Icons.receipt_long_rounded),
+                  Container(
+                    padding: const EdgeInsets.all(8),
+                    decoration: BoxDecoration(
+                      color: AppTheme.primaryColor.withOpacity(0.1),
+                      borderRadius: BorderRadius.circular(10),
+                    ),
+                    child: const Icon(Icons.bar_chart_rounded,
+                        color: AppTheme.primaryColor, size: 20),
+                  ),
                   const SizedBox(width: 10),
-                  _buildStatCard('الإيرادات', '$todayRevenue$_currencySymbol',
-                      Icons.payments_rounded),
-                  const SizedBox(width: 10),
-                  _buildStatCard('الأرباح', '$todayProfit$_currencySymbol',
-                      Icons.account_balance_wallet_rounded),
-                  const SizedBox(width: 10),
-                  _buildStatCard('المتوسط', '$todayAvg$_currencySymbol',
-                      Icons.bar_chart_rounded),
+                  const Text(
+                    'ملخص اليوم',
+                    style: TextStyle(
+                        fontSize: 16,
+                        fontWeight: FontWeight.bold,
+                        color: Color(0xFF1A1C1E)),
+                  ),
                 ],
               ),
-            ),
-          ],
+              const SizedBox(height: 16),
+              Row(
+                children: [
+                  _summaryItem('المبيعات', '$todayCount', Icons.receipt_long_rounded),
+                  _summaryItem('الإيرادات', '$todayRevenue$_currencySymbol', Icons.payments_rounded),
+                ],
+              ),
+              const SizedBox(height: 12),
+              Row(
+                children: [
+                  _summaryItem('الأرباح', '$todayProfit$_currencySymbol', Icons.account_balance_wallet_rounded),
+                  _summaryItem('المتوسط', '$todayAvg$_currencySymbol', Icons.bar_chart_rounded),
+                ],
+              ),
+            ],
+          ),
         );
       },
     );
   }
 
-  Widget _buildStatCard(String label, String value, IconData icon) {
-    return Container(
-      width: 115,
-      padding: const EdgeInsets.all(14),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(14),
-        boxShadow: [
-          BoxShadow(
-              color: Colors.black.withOpacity(0.04),
-              blurRadius: 8,
-              offset: const Offset(0, 2)),
-        ],
-      ),
+  Widget _summaryItem(String label, String value, IconData icon) {
+    return Expanded(
       child: Row(
         children: [
           Icon(icon, color: AppTheme.primaryColor, size: 20),
-          const SizedBox(width: 10),
+          const SizedBox(width: 8),
           Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
@@ -638,207 +645,16 @@ class _AdminHomePageState extends State<AdminHomePage>
                 const SizedBox(height: 2),
                 FittedBox(
                   fit: BoxFit.scaleDown,
-                  child: Text(
-                    value,
-                    style: const TextStyle(
-                        fontSize: 13,
-                        fontWeight: FontWeight.bold,
-                        color: Color(0xFF1A1C1E)),
-                  ),
+                  child: Text(value,
+                      style: const TextStyle(
+                          fontSize: 13,
+                          fontWeight: FontWeight.bold,
+                          color: Color(0xFF1A1C1E))),
                 ),
               ],
             ),
           ),
         ],
-      ),
-    );
-  }
-
-  /// قسم تنبيهات المخزون
-  Widget _buildStockAlertsSection() {
-    return BlocBuilder<ProductBloc, ProductState>(
-      builder: (context, state) {
-        // تصفية المنتجات ذات المخزون المنخفض أو القريبة من انتهاء الصلاحية
-        // مع استبعاد المنتجات منتهية الصلاحية (تظهر في قسم منفصل)
-        final now = DateTime.now();
-        final lowStockProducts = state.products.where((p) {
-          // استبعاد المنتجات منتهية الصلاحية
-          if (p.expiryDate != null && p.expiryDate!.isBefore(now)) {
-            return false;
-          }
-          return p.isAtOrBelowReorderPoint ||
-              (p.daysUntilExpiry != null &&
-                  p.daysUntilExpiry! > 0 &&
-                  p.daysUntilExpiry! <= 30);
-        }).toList();
-
-        return Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            // Header
-            Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                Row(
-                  children: [
-                    Container(
-                      padding: const EdgeInsets.all(8),
-                      decoration: BoxDecoration(
-                        color: AppTheme.primaryColor.withOpacity(0.1),
-                        borderRadius: BorderRadius.circular(10),
-                      ),
-                      child: const Icon(Icons.notifications_active_outlined,
-                          color: AppTheme.primaryColor, size: 20),
-                    ),
-                    const SizedBox(width: 10),
-                    const Text(
-                      'تنبيهات المخزون',
-                      style: TextStyle(
-                          fontSize: 16,
-                          fontWeight: FontWeight.bold,
-                          color: Color(0xFF1A1C1E)),
-                    ),
-                  ],
-                ),
-                GestureDetector(
-                  onTap: () => context.push('/stock-alerts'),
-                  child: const Text(
-                    'عرض الكل',
-                    style: TextStyle(
-                        fontSize: 12,
-                        color: AppTheme.primaryColor,
-                        fontWeight: FontWeight.w600),
-                  ),
-                ),
-              ],
-            ),
-            const SizedBox(height: 12),
-            // Products List
-            if (lowStockProducts.isEmpty)
-              Container(
-                padding: const EdgeInsets.all(20),
-                decoration: BoxDecoration(
-                  color: Colors.white,
-                  borderRadius: BorderRadius.circular(14),
-                  border: Border.all(color: Colors.grey[100]!),
-                ),
-                child: Center(
-                  child: Column(
-                    children: [
-                      Icon(Icons.check_circle_outline,
-                          size: 40, color: Colors.green[300]),
-                      const SizedBox(height: 8),
-                      Text('لا توجد تنبيهات',
-                          style:
-                              TextStyle(color: Colors.grey[400], fontSize: 13)),
-                    ],
-                  ),
-                ),
-              )
-            else
-              ListView.separated(
-                shrinkWrap: true,
-                physics: const NeverScrollableScrollPhysics(),
-                itemCount:
-                    lowStockProducts.length > 5 ? 5 : lowStockProducts.length,
-                separatorBuilder: (_, __) => const SizedBox(height: 8),
-                itemBuilder: (context, index) {
-                  final product = lowStockProducts[index];
-                  return _buildStockAlertCard(product);
-                },
-              ),
-          ],
-        );
-      },
-    );
-  }
-
-  Widget _buildStockAlertCard(Product product) {
-    final daysUntilExpiry = product.daysUntilExpiry;
-    final isExpiringSoon = daysUntilExpiry != null && daysUntilExpiry <= 30;
-
-    return Container(
-      width: double.infinity,
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(12),
-        border: Border.all(
-          color: isExpiringSoon
-              ? Colors.red.withOpacity(0.3)
-              : Colors.orange.withOpacity(0.3),
-        ),
-      ),
-      child: Padding(
-        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
-        child: Row(
-          children: [
-            // Product Image
-            Container(
-              width: 44,
-              height: 44,
-              decoration: BoxDecoration(
-                color: AppTheme.primaryColor.withOpacity(0.1),
-                borderRadius: BorderRadius.circular(10),
-              ),
-              child: product.imageUrl != null && product.imageUrl!.isNotEmpty
-                  ? ClipRRect(
-                      borderRadius: BorderRadius.circular(10),
-                      child: Image.file(
-                        File(product.imageUrl!),
-                        fit: BoxFit.cover,
-                        errorBuilder: (_, __, ___) => _buildDefaultImage(),
-                      ),
-                    )
-                  : _buildDefaultImage(),
-            ),
-            const SizedBox(width: 12),
-            // Details
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  Text(
-                    product.name,
-                    style: const TextStyle(
-                        fontWeight: FontWeight.w600, fontSize: 13),
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
-                  ),
-                  const SizedBox(height: 4),
-                  Text(
-                    '${product.stock} ${product.unit}',
-                    style: const TextStyle(
-                        fontSize: 12,
-                        color: AppTheme.primaryColor,
-                        fontWeight: FontWeight.w600),
-                  ),
-                  if (daysUntilExpiry != null) ...[
-                    const SizedBox(height: 2),
-                    Row(
-                      children: [
-                        Icon(
-                          Icons.event,
-                          size: 12,
-                          color: isExpiringSoon ? Colors.red : Colors.grey[400],
-                        ),
-                        const SizedBox(width: 4),
-                        Text(
-                          '$daysUntilExpiry يوم متبقي',
-                          style: TextStyle(
-                              fontSize: 11,
-                              color: isExpiringSoon
-                                  ? Colors.red
-                                  : Colors.grey[500]),
-                        ),
-                      ],
-                    ),
-                  ],
-                ],
-              ),
-            ),
-          ],
-        ),
       ),
     );
   }
