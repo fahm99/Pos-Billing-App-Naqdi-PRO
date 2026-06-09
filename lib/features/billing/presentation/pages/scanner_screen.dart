@@ -29,6 +29,7 @@ class _ScannerScreenState extends State<ScannerScreen>
   bool _isCameraOn = true;
   bool _isFlashOn = false;
   bool _isDisposed = false;
+  bool _isInitializing = false;
   final Map<String, DateTime> _lastScanTimes = {};
   static const Duration _scanCooldown = Duration(seconds: 2);
   String _currencySymbol = 'ر.س';
@@ -95,11 +96,19 @@ class _ScannerScreenState extends State<ScannerScreen>
     }
   }
 
-  void _initScanner() {
-    if (_isDisposed) return;
+  Future<void> _initScanner() async {
+    if (_isDisposed || _isInitializing) return;
+    _isInitializing = true;
+    // انتظار قصير للتأكد من تحرير كاميرا الصفحة السابقة
+    await Future.delayed(const Duration(milliseconds: 300));
+    if (_isDisposed || !mounted) {
+      _isInitializing = false;
+      return;
+    }
     _scannerController = ScannerService().createController();
     _barcodeSubscription = _scannerController!.barcodes.listen(_onDetect);
-    ScannerService().startController(_scannerController!);
+    await ScannerService().startController(_scannerController!);
+    _isInitializing = false;
     if (mounted && !_isDisposed) setState(() {});
   }
 
@@ -143,7 +152,10 @@ class _ScannerScreenState extends State<ScannerScreen>
     _stopScanner();
     context.push('/checkout').then((_) {
       _navigatingToCheckout = false;
-      if (mounted && !_isDisposed && _isCameraOn && _scannerController != null) {
+      if (mounted &&
+          !_isDisposed &&
+          _isCameraOn &&
+          _scannerController != null) {
         _startScanner();
       }
     });
@@ -187,8 +199,8 @@ class _ScannerScreenState extends State<ScannerScreen>
               current.status == SalesStatus.error &&
               previous.status != current.status,
           listener: (context, state) {
-            NotificationHelper.show(context,
-                state.message ?? 'حدث خطأ أثناء إتمام البيع');
+            NotificationHelper.show(
+                context, state.message ?? 'حدث خطأ أثناء إتمام البيع');
           },
         ),
       ],
@@ -237,7 +249,8 @@ class _ScannerScreenState extends State<ScannerScreen>
                     child: Column(
                       mainAxisSize: MainAxisSize.min,
                       children: [
-                        Icon(Icons.error_outline, color: Colors.white70, size: 48),
+                        Icon(Icons.error_outline,
+                            color: Colors.white70, size: 48),
                         SizedBox(height: 12),
                         Text(
                           'تعذر تشغيل الكاميرا',
@@ -517,7 +530,8 @@ class _ScannerScreenState extends State<ScannerScreen>
             ),
             child: ClipRRect(
               borderRadius: BorderRadius.circular(12),
-              child: item.product.imageUrl != null && item.product.imageUrl!.isNotEmpty
+              child: item.product.imageUrl != null &&
+                      item.product.imageUrl!.isNotEmpty
                   ? Image.file(
                       File(item.product.imageUrl!),
                       fit: BoxFit.cover,
@@ -632,9 +646,7 @@ class _ScannerScreenState extends State<ScannerScreen>
         width: double.infinity,
         height: 52,
         child: ElevatedButton(
-          onPressed: state.cartItems.isEmpty
-              ? null
-              : () => _goToCheckout(),
+          onPressed: state.cartItems.isEmpty ? null : () => _goToCheckout(),
           style: ElevatedButton.styleFrom(
             backgroundColor: AppTheme.primaryColor,
             foregroundColor: Colors.white,

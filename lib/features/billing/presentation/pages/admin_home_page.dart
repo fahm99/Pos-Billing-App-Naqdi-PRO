@@ -30,6 +30,7 @@ class _AdminHomePageState extends State<AdminHomePage>
   bool _isCameraOn = true;
   bool _isFlashOn = false;
   bool _isDisposed = false;
+  bool _isInitializing = false;
   final Map<String, DateTime> _lastScanTimes = {};
   String _currencySymbol = 'ر.س';
   bool _navigatingToCheckout = false;
@@ -95,11 +96,19 @@ class _AdminHomePageState extends State<AdminHomePage>
     }
   }
 
-  void _initScanner() {
-    if (_isDisposed) return;
+  Future<void> _initScanner() async {
+    if (_isDisposed || _isInitializing) return;
+    _isInitializing = true;
+    // انتظار قصير للتأكد من تحرير كاميرا الصفحة السابقة
+    await Future.delayed(const Duration(milliseconds: 300));
+    if (_isDisposed || !mounted) {
+      _isInitializing = false;
+      return;
+    }
     _scannerController = ScannerService().createController();
     _barcodeSubscription = _scannerController!.barcodes.listen(_onDetect);
-    ScannerService().startController(_scannerController!);
+    await ScannerService().startController(_scannerController!);
+    _isInitializing = false;
     if (mounted && !_isDisposed) setState(() {});
   }
 
@@ -143,7 +152,10 @@ class _AdminHomePageState extends State<AdminHomePage>
     _stopScanner();
     context.push('/checkout').then((_) {
       _navigatingToCheckout = false;
-      if (mounted && !_isDisposed && _isCameraOn && _scannerController != null) {
+      if (mounted &&
+          !_isDisposed &&
+          _isCameraOn &&
+          _scannerController != null) {
         _startScanner();
       }
     });
@@ -187,8 +199,8 @@ class _AdminHomePageState extends State<AdminHomePage>
               current.status == SalesStatus.error &&
               previous.status != current.status,
           listener: (context, state) {
-            NotificationHelper.show(context,
-                state.message ?? 'حدث خطأ أثناء إتمام البيع');
+            NotificationHelper.show(
+                context, state.message ?? 'حدث خطأ أثناء إتمام البيع');
           },
         ),
       ],
@@ -258,8 +270,7 @@ class _AdminHomePageState extends State<AdminHomePage>
                   children: [
                     const Text('السلة',
                         style: TextStyle(
-                            fontSize: 15,
-                            fontWeight: FontWeight.bold)),
+                            fontSize: 15, fontWeight: FontWeight.bold)),
                     Text(
                       '${state.totalAmount.toStringAsFixed(2)} $_currencySymbol',
                       style: const TextStyle(
@@ -327,7 +338,8 @@ class _AdminHomePageState extends State<AdminHomePage>
             ),
             child: ClipRRect(
               borderRadius: BorderRadius.circular(10),
-              child: item.product.imageUrl != null && item.product.imageUrl!.isNotEmpty
+              child: item.product.imageUrl != null &&
+                      item.product.imageUrl!.isNotEmpty
                   ? Image.file(
                       File(item.product.imageUrl!),
                       fit: BoxFit.cover,
@@ -374,10 +386,12 @@ class _AdminHomePageState extends State<AdminHomePage>
         children: [
           _buildQtyBtn(Icons.remove_rounded, () {
             if (item.quantity > 1) {
-              context.read<BillingBloc>().add(UpdateQuantityEvent(
-                  item.product.id, item.quantity - 1));
+              context
+                  .read<BillingBloc>()
+                  .add(UpdateQuantityEvent(item.product.id, item.quantity - 1));
             } else {
-              context.read<BillingBloc>()
+              context
+                  .read<BillingBloc>()
                   .add(RemoveProductFromCartEvent(item.product.id));
             }
           }),
@@ -385,12 +399,13 @@ class _AdminHomePageState extends State<AdminHomePage>
             width: 28,
             child: Text('${item.quantity}',
                 textAlign: TextAlign.center,
-                style: const TextStyle(
-                    fontWeight: FontWeight.bold, fontSize: 13)),
+                style:
+                    const TextStyle(fontWeight: FontWeight.bold, fontSize: 13)),
           ),
           _buildQtyBtn(Icons.add_rounded, () {
-            context.read<BillingBloc>().add(
-                UpdateQuantityEvent(item.product.id, item.quantity + 1));
+            context
+                .read<BillingBloc>()
+                .add(UpdateQuantityEvent(item.product.id, item.quantity + 1));
           }, isAdd: true),
         ],
       ),
@@ -489,7 +504,6 @@ class _AdminHomePageState extends State<AdminHomePage>
                 ],
               ),
             ),
-
           ],
         ),
       ),
@@ -647,16 +661,16 @@ class _AdminHomePageState extends State<AdminHomePage>
         // تصفية المنتجات ذات المخزون المنخفض أو القريبة من انتهاء الصلاحية
         // مع استبعاد المنتجات منتهية الصلاحية (تظهر في قسم منفصل)
         final now = DateTime.now();
-        final lowStockProducts = state.products
-            .where((p) {
-              // استبعاد المنتجات منتهية الصلاحية
-              if (p.expiryDate != null && p.expiryDate!.isBefore(now)) {
-                return false;
-              }
-              return p.isAtOrBelowReorderPoint ||
-                  (p.daysUntilExpiry != null && p.daysUntilExpiry! > 0 && p.daysUntilExpiry! <= 30);
-            })
-            .toList();
+        final lowStockProducts = state.products.where((p) {
+          // استبعاد المنتجات منتهية الصلاحية
+          if (p.expiryDate != null && p.expiryDate!.isBefore(now)) {
+            return false;
+          }
+          return p.isAtOrBelowReorderPoint ||
+              (p.daysUntilExpiry != null &&
+                  p.daysUntilExpiry! > 0 &&
+                  p.daysUntilExpiry! <= 30);
+        }).toList();
 
         return Column(
           crossAxisAlignment: CrossAxisAlignment.start,
@@ -725,9 +739,8 @@ class _AdminHomePageState extends State<AdminHomePage>
               ListView.separated(
                 shrinkWrap: true,
                 physics: const NeverScrollableScrollPhysics(),
-                itemCount: lowStockProducts.length > 5
-                    ? 5
-                    : lowStockProducts.length,
+                itemCount:
+                    lowStockProducts.length > 5 ? 5 : lowStockProducts.length,
                 separatorBuilder: (_, __) => const SizedBox(height: 8),
                 itemBuilder: (context, index) {
                   final product = lowStockProducts[index];
@@ -767,18 +780,16 @@ class _AdminHomePageState extends State<AdminHomePage>
                 color: AppTheme.primaryColor.withOpacity(0.1),
                 borderRadius: BorderRadius.circular(10),
               ),
-              child:
-                  product.imageUrl != null && product.imageUrl!.isNotEmpty
-                      ? ClipRRect(
-                          borderRadius: BorderRadius.circular(10),
-                          child: Image.file(
-                            File(product.imageUrl!),
-                            fit: BoxFit.cover,
-                            errorBuilder: (_, __, ___) =>
-                                _buildDefaultImage(),
-                          ),
-                        )
-                      : _buildDefaultImage(),
+              child: product.imageUrl != null && product.imageUrl!.isNotEmpty
+                  ? ClipRRect(
+                      borderRadius: BorderRadius.circular(10),
+                      child: Image.file(
+                        File(product.imageUrl!),
+                        fit: BoxFit.cover,
+                        errorBuilder: (_, __, ___) => _buildDefaultImage(),
+                      ),
+                    )
+                  : _buildDefaultImage(),
             ),
             const SizedBox(width: 12),
             // Details
@@ -797,7 +808,10 @@ class _AdminHomePageState extends State<AdminHomePage>
                   const SizedBox(height: 4),
                   Text(
                     '${product.stock} ${product.unit}',
-                    style: const TextStyle(fontSize: 12, color: AppTheme.primaryColor, fontWeight: FontWeight.w600),
+                    style: const TextStyle(
+                        fontSize: 12,
+                        color: AppTheme.primaryColor,
+                        fontWeight: FontWeight.w600),
                   ),
                   if (daysUntilExpiry != null) ...[
                     const SizedBox(height: 2),

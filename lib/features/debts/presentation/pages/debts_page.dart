@@ -186,7 +186,7 @@ class _DebtsPageState extends State<DebtsPage> {
     final nameController = TextEditingController();
     final amountController = TextEditingController();
     final descController = TextEditingController();
-    final uuid = const Uuid();
+    const uuid = Uuid();
 
     showModalBottomSheet(
       context: context,
